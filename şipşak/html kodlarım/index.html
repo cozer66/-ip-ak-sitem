@@ -1,0 +1,1116 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <title>Şipşak Sitem</title>
+<style>
+        /* YAN MENÜ STİLLERİ (Senin Orijinal Kodun) */
+        body { font-family: sans-serif; transition: margin-left .5s; margin: 0; background-color: #ceced8; color: #333; }
+        .sidebar {
+            height: 100%; width: 0; position: fixed; z-index: 10;
+            top: 0; left: 0; background-color: #111;
+            overflow-x: hidden; transition: 0.5s; padding-top: 60px;
+        }
+        .sidebar a { padding: 15px; text-decoration: none; font-size: 20px; color: #818181; display: block; }
+        .sidebar a:hover { color: #b69898; }
+        .sidebar .closebtn { position: absolute; top: 0; right: 25px; font-size: 36px; }
+        .openbtn { font-size: 20px; cursor: pointer; background-color: #111; color: white; padding: 10px 15px; border: none; border-radius: 5px; margin-bottom: 20px; }
+        #main { padding: 20px; transition: margin-left .5s; }
+
+        /* --- ANA SAYFA BUTON DÜZENİ (YENİ) --- */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        /* Kutunun (Butonun) Kendisi */
+        .dash-card {
+            background: #2d1b1b;
+            color: #e2c4c4;
+            border-radius: 15px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            position: relative;
+            min-height: 180px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .dash-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0,0,0,0.2);
+            background: #3e2525;
+        }
+
+        /* Kutunun Ön Yüzü (Sadece İkon ve Başlık varken) */
+        .card-front {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            flex-grow: 1;
+            transition: 0.4s;
+            pointer-events: none; /* Tıklamaların direkt karta gitmesini sağlar */
+        }
+
+        .card-front span {
+            font-size: 4rem;
+            margin-bottom: 15px;
+            transition: 0.4s;
+        }
+        
+        .card-front h2 { margin: 0; font-size: 1.5rem; }
+
+        /* İçerik Alanı (Başlangıçta Gizli) */
+        .card-content {
+            display: none;
+            opacity: 0;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(226, 196, 196, 0.3);
+            transition: opacity 0.4s;
+        }
+
+        .card-content p { font-size: 14px; line-height: 1.6; color: #fff; }
+
+        /* --- KART AKTİF (AÇIK) OLDUĞUNDAKİ HALİ --- */
+        .dash-card.active {
+            grid-column: 1 / -1; /* Açıldığında bulunduğu satırı tamamen kaplar */
+            min-height: 350px;
+            background: #46281b;
+            cursor: default;
+            transform: translateY(0);
+        }
+
+        .dash-card.active .card-front {
+            flex-direction: row;
+            justify-content: flex-start;
+            height: auto;
+            flex-grow: 0;
+            gap: 15px;
+        }
+
+        .dash-card.active .card-front span {
+            font-size: 2.5rem;
+            margin-bottom: 0;
+        }
+
+        .dash-card.active .card-content {
+            display: block;
+            opacity: 1;
+            animation: fadeIn 0.6s ease forwards;
+        }
+
+        /* Kapatma Butonu (Sadece kart açılınca görünür) */
+        .close-card-btn {
+            display: none;
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            font-size: 20px;
+            cursor: pointer;
+            line-height: 35px;
+            text-align: center;
+        }
+
+        .close-card-btn:hover { background: rgba(255,255,255,0.4); }
+        .dash-card.active .close-card-btn { display: block; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Sayfaya git linki stili */
+        .go-page-link {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 8px 15px;
+            background: #e2c4c4;
+            color: #2d1b1b;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        /* ========================================== */
+        /* KART İÇİ WIDGET (MENÜ VE SAYAÇ) STİLLERİ   */
+        /* ========================================== */
+        
+        .widget-menu { display: flex; flex-direction: column; gap: 10px; }
+        
+        .widget-btn {
+            background: #e2c4c4; color: #2d1b1b; border: none; padding: 12px;
+            border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; 
+            font-size: 16px; text-align: left;
+        }
+        
+        .widget-btn:hover { 
+            background: #fff; 
+            transform: translateX(5px); /* Üzerine gelince hafif sağa kayar */
+        } 
+
+        .widget-view { display: none; text-align: center; }
+
+        .timer-display { 
+            font-size: 4rem; font-weight: bold; margin: 15px 0; color: #fff; 
+            font-variant-numeric: tabular-nums; /* Rakamların sabit genişlikte durmasını sağlar */
+        }
+        
+        .timer-controls { display: flex; justify-content: center; gap: 15px; }
+
+        .t-btn { 
+            padding: 10px 20px; border: none; border-radius: 8px; 
+            cursor: pointer; font-weight: bold; font-size: 15px; 
+        }
+        .t-btn.start { background: #193219; color: white; }
+        .t-btn.pause { background: #3c673d; color: white; }
+        .t-btn.reset { background: #a9342c; color: white; }
+
+        .back-btn-inner {
+            background: transparent; color: #e2c4c4; border: 1px solid #e2c4c4;
+            padding: 6px 12px; border-radius: 5px; cursor: pointer; 
+            display: inline-block; margin-bottom: 10px;
+        }
+        
+        .back-btn-inner:hover { background: #e2c4c4; color: #2d1b1b; }
+        .timer-container {
+            display: flex; 
+            flex-direction: row; 
+            margin-top: 20px; 
+            gap: 15px; 
+            width: 100%;
+            align-items: stretch;/* İki kutunun yüksekliğini milimetrik eşitler */
+            flex-wrap: wrap; /* Küçük ekranlarda kutuların alt alta gelmesini sağlar */
+        }
+        .timer-box {
+            flex: 1; 
+            min-width: 200px;
+            text-align: center; 
+            padding: 15px; 
+            border-radius: 10px;
+        }
+        @media (max-width: 500px) {
+            .timer-container {
+                flex-direction: column !important;
+                gap: 20px !important; /* Alt alta geçtiklerinde aralarında boşluk olsun */
+            }
+            .timer-box {
+                width: 100% !important; /* Ekranı tam kaplasınlar */
+                box-sizing: border-box !important; /* Taşıntıları engeller */
+            }
+        }
+        
+    /* Kitap Öneri Widget'ı Özel Tasarımları */
+    .kitap-oneri-kapsayici {
+        margin-top: 15px;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+        padding: 10px;
+        text-align: left;
+    }
+
+    .oneri-formu {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-bottom: 15px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        padding-bottom: 15px;
+    }
+
+    /* Form içindeki tüm input, textarea ve select elemanlarını eşitler */
+    .oneri-formu input, 
+    .oneri-formu textarea, 
+    .oneri-formu select {
+        width: 100%;
+        padding: 8px;
+        border: none;
+        border-radius: 4px;
+        font-size: 13px;
+        box-sizing: border-box;
+    }
+
+    .oneri-formu select {
+        background-color: #aacad8;
+        color: #333;
+    }
+
+    .oneri-formu textarea {
+        resize: none;
+    }
+
+    .oneri-formu button {
+        background-color: #cf77ba;
+        color: white;
+        border: none;
+        padding: 8px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    .oneri-formu button:hover {
+        background-color: #cf77ba;
+    }
+
+    /* Liste kaydırma ayarları */
+    .oneri-listesi {
+        max-height: 150px;
+        overflow-y: auto;
+        margin-bottom: 15px;
+        padding-right: 5px;
+    }
+
+    .tekil-oneri {
+        background: rgba(255, 255, 255, 0.9);
+        color: #333;
+        padding: 8px 10px;
+        border-radius: 5px;
+        margin-bottom: 8px;
+        font-size: 13px;
+    }
+
+    .tekil-oneri p {
+        margin: 4px 0 0 0;
+        font-size: 12px;
+        font-style: italic;
+        color: #444;
+    }
+    /* YENİ ÜST MENÜ STİLLERİ */
+    .top-navbar {
+        display: flex;
+        align-items: center;
+        background-color: #111;
+        padding: 10px 20px;
+        width: 100%;
+        box-sizing: border-box;
+        position: sticky;
+        top: 0;
+        z-index: 9;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+    .top-navbar .openbtn { margin-bottom: 0; }
+    .top-navbar .nav-links { display: flex; gap: 15px; margin-left: 20px; flex-wrap: wrap;}
+    .top-navbar .nav-links a { color: #818181; text-decoration: none; font-size: 16px; font-weight: bold; transition: 0.3s; }
+    .top-navbar .nav-links a:hover { color: #e2c4c4; }
+
+    /* Defter Görünümlü Haftalık Ajanda */
+    .notebook-page {
+        background-color: #fdfaf6;
+        background-image: repeating-linear-gradient(transparent, transparent 24px, #ccc 25px);
+        line-height: 25px;
+        padding: 25px 20px;
+        border-radius: 5px;
+        border-left: 20px solid #d4a3a3; /* Defterin telli/ciltli kısmı gibi */
+        color: #333;
+        text-align: left;
+        min-height: 200px;
+        box-shadow: 2px 2px 8px rgba(0,0,0,0.2);
+        font-family: 'Comic Sans MS', cursive, sans-serif; /* El yazısı hissiyatı */
+    }
+
+    /* Takvim Vari Günlük Ajanda */
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 5px;
+        margin-top: 15px;
+    }
+    .cal-day {
+        background: rgba(0,0,0,0.2);
+        border: 1px solid rgba(255,255,255,0.2);
+        padding: 10px;
+        border-radius: 5px;
+        min-height: 70px;
+        color: white;
+        text-align: left;
+        font-size: 12px;
+    }
+    .cal-day:hover { background: rgba(255,255,255,0.1); cursor: pointer; }
+    .cal-date { font-weight: bold; display: block; color: #e2c4c4; margin-bottom: 5px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    </style>
+</head>
+<body>
+
+    <div id="mySidebar" class="sidebar">
+        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+        <a href="#">🏠 Ana Sayfa</a>
+        <hr style="border: 0.5px solid #333; margin: 10px 20px;">
+        <a href="{{ url_for('pomodoro') }}"> Pomodoro</a>
+        <a href="{{ url_for('hobiler') }}"> Hobiler</a>
+        <a href="{{ url_for('notlar') }}"> Hızlı Notlar</a>
+        <a href="{{ url_for('ajanda') }}"> Ajanda</a>
+        <a href="{{ url_for('hatirlatici') }}"> Hatırlatıcı</a>
+    </div>
+
+    <div id="main">
+
+    <div class="top-navbar">
+        <button class="openbtn" onclick="toggleNav(event)">&#9776;</button>
+        <div class="nav-links">
+            <a href="{{ url_for('pomodoro') }}">Pomodoro</a>
+            <a href="{{ url_for('hobiler') }}">Hobiler</a>
+            <a href="{{ url_for('notlar') }}">Hızlı Notlar</a>
+            <a href="{{ url_for('ajanda') }}">Ajanda</a>
+            <a href="{{ url_for('hatirlatici') }}">Hatırlatıcı</a>
+        </div>
+    </div>
+
+<div style="padding: 20px;">
+    <h1 style="color: #241313; margin-top: 0;">Dijital Odama Hoşgeldin!</h1>
+    <p style="color: #241313;">Burası benim kişisel çalışma alanım. Sen de bana katılmak ister misin?</p>
+        <div class="dashboard-grid">
+            
+            <div class="dash-card" onclick="openCard(this)">
+                <button class="close-card-btn" onclick="closeCard(event, this)">×</button>
+                <div class="card-front">
+                    <span>🍅</span>
+                    <h2>Pomodorolar</h2>
+                </div>
+                
+                <div class="card-content">
+                    
+                    <div class="widget-menu">
+                        <button class="widget-btn" onclick="showWidgetView(event, this, 'view-pomodoro')">⏱️ Pomodoro</button>
+                        <button class="widget-btn" onclick="showWidgetView(event, this, 'view-tamamlanan')">✅ Tamamlanan Pomodorolar</button>
+                        <button class="widget-btn" onclick="showWidgetView(event, this, 'view-kronometre')">⏳ Kronometre</button>
+                        <button class="widget-btn" onclick="showWidgetView(event, this, 'view-domates')">🍅 Domates</button>
+                        <button class="widget-btn" onclick="showWidgetView(event, this, 'view-marul')">🥬 Marul</button>
+                    </div>
+
+                    <div class="widget-view" id="view-pomodoro" style="display: none;">
+                        <button class="back-btn-inner" onclick="goBackToWidgetMenu(event, this)">← Menüye Dön</button>
+                        <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: stretch; margin-top: 20px; gap: 15px; width: 100%;">
+                        <!-- ÇALIŞMA KUTUSU -->
+                        <div style="flex: 1; text-align: center; background: rgba(0,0,0,0.15); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
+                        <h3 style="color: #fff; margin: 0 0 10px 0; font-size: 16px;">Çalışma 🍅</h3>
+                        <div style="margin: 15px 0; color: #fff; font-size: 14px;">
+                            <label for="dash-pomodoro-input">Süre (dk): </label>
+                            <input type="number" id="dash-pomodoro-input" value="25" min="1" max="60" style="width: 50px; padding: 5px; border-radius: 5px; border: none; text-align: center; font-weight: bold;">
+                            <button onclick="setDashPomodoroTime(event, this)" style="background: #355e36; color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; margin-left: 5px; font-weight: bold;">Ayarla</button>
+                        </div>
+                        <div class="timer-display" id="dash-pomodoro-display">25:00</div>
+                        <div class="timer-controls">
+                            <button class="t-btn start"  onclick="toggleDashPomodoro(event, this)">Başlat</button>
+                            <button class="t-btn reset"  onclick="resetDashPomodoro(event, this)">Sıfırla</button>
+                        </div>
+                        </div>
+                        <!-- MOLA KUTUSU -->
+                        <div style="flex: 1; min-width: 200px; text-align: center; background: rgba(0,0,0,0.15); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1); box-sizing: border-box; display: flex; flex-direction: column; justify-content: flex-start;">
+                            <h3 style="color: #fff; margin: 0 0 10px 0; font-size: 16px;">Mola ☕</h3>
+                            <div style="margin: 15px 0; color: #fff; font-size: 14px;">
+                                <label for="dash-break-input">Süre (dk): </label>
+                                <input type="number" id="dash-break-input" value="5" min="1" max="30" style="width: 50px; padding: 5px; border-radius: 5px; border: none; text-align: center; font-weight: bold;">
+                                <button onclick="setDashBreakTime(event, this)" style="background: #355e36; color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; margin-left: 5px; font-weight: bold;">Ayarla</button>
+                            </div>
+                            <div class="timer-display" id="dash-break-display" style="font-size: 36px; font-weight: bold; color: #d0e3eb; margin-bottom: 15px;">05:00</div>
+                            <div class="timer-controls" style="display: flex; justify-content: center; gap: 8px; margin-top: auto;">
+                                <button class="t-btn start" id="dash-break-start-btn" style="background-color: #475c6e; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 13px;" onclick="toggleDashBreak(event, this)">Başlat</button>
+                                <button class="t-btn reset" style="background-color: #834844; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 13px;" onclick="resetDashBreak(event, this)">Sıfırla</button>                                </div>
+                            </div>
+                        </div>
+                     </div>
+                    <div class="widget-view" id="view-tamamlanan" style="display: none;">
+                        <button class="back-btn-inner" onclick="goBackToWidgetMenu(event, this)">← Menüye Dön</button>
+                        
+                        <div style="margin-top: 20px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
+                            <h3 style="color: #fff; margin-bottom: 15px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;">
+                                Çalışma  Geçmişi 
+                            </h3>
+                            
+                            <div id="pomodoro-history-list" style="max-height: 250px; overflow-y: auto; padding-right: 5px;">
+                                <p style="color: #bbb; text-align: center; font-size: 14px;">Henüz tamamlanmış çalışma yok.</p>
+                            </div>
+
+                            <button onclick="clearPomodoroHistory()" style="width: 100%; margin-top: 15px; background: #953b7d; color: white; border: none; padding: 8px; border-radius: 5px; cursor: pointer; font-size: 12px; opacity: 0.8;">
+                                Geçmişi Temizle
+                            </button>
+                        </div>
+                    </div>
+                    <div class="widget-view" id="view-kronometre" style="display: none;">
+                        <button class="back-btn-inner" onclick="goBackToWidgetMenu(event, this)">← Menüye Dön</button>
+                        <div style="flex: 1; text-align: center; background: rgba(98, 123, 156, 0.15); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.3);">
+                        <div class="timer-display" id="dash-chrono-display">00:00</div>
+                        <div class="timer-controls">
+                            <button class="t-btn start" onclick="toggleDashChrono(event, this)">Başlat</button>
+                            <button class="t-btn reset" onclick="resetDashChrono(event, this)">Sıfırla</button>
+                        </div>
+                    </div>
+                    </div>
+
+                    <div class="widget-view" id="view-domates" style="display: none; text-align: center;">
+                        <button class="back-btn-inner" onclick="goBackToWidgetMenu(event, this)">← Menüye Dön</button>
+                        <p style="margin-top: 30px; font-size: 1.2rem; color: #fff; font-style: italic;">"Kelin ilacı olsa kendi kafasına sürermiş!"</p>
+                    <div style="margin-top: 20px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
+
+                    <div class="yorumlar-kapsayici">
+                        <h4 style="color: #fff; margin-top: 10px; border-bottom: 1px solid rgba(255,255,255,0.3); padding-bottom: 5px;">Yorumlar:</h4>
+                        <div id="yorumlar-listesi" style="max-height: 150px; overflow-y: auto; margin-top: 10px; color: #fff; font-size: 14px;">
+                            <p style="text-align: center; color: #bbb;">Henüz yorum yok.</p>
+                        </div>
+                    </div>
+                    <div style="margin-top: 10px; display: flex; gap: 10px;">
+                        <input type="text" id="yorum-input" placeholder="Sizde bir fikir ekleyin..." style="flex: 1; padding: 8px; border-radius: 5px; border: none; font-size: 14px;">
+                        <button onclick="yorumEkle()" style="background: #4caf50; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">Gönder</button>
+                    </div>
+                    </div>
+                    </div>
+
+                    <div class="widget-view" id="view-marul" style="display: none; text-align: center;">
+                        <button class="back-btn-inner" onclick="goBackToWidgetMenu(event, this)">← Menüye Dön</button>
+                        <p style="margin-top: 30px; font-size: 1.2rem; color: #fff; font-style: italic;">"Hızlı giden atın boku seyrek düşermiş!"</p>                        
+                        <div style="margin-top: 20px; background: rgba(0,0,0,0.2); padding: 15px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.1);">
+                        <div class="yorumlar-kapsayici">
+                            <h4 style="color: #fff; margin-top: 10px; border-bottom: 1px solid rgba(255,255,255,0.3); padding-bottom: 5px;">Yorumlar:</h4>
+                            <div id="yorumlar-listesi-marul" style="max-height: 150px; overflow-y: auto; margin-top: 10px; color: #fff; font-size: 14px;">
+                                <p style="text-align: center; color: #bbb;">Henüz yorum yok.</p>
+                            </div>
+                        </div>
+                        <div style="margin-top: 10px; display: flex; gap: 10px;">
+                            <input type="text" id="yorum-input-marul" placeholder="Sizde bir fikir ekleyin..." style="flex: 1; padding: 8px; border-radius: 5px; border: none; font-size: 14px;">
+                            <button onclick="yorumEkleMarul()" style="background: #4caf50; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer;">Gönder</button>
+                        </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="dash-card" onclick="openCard(this)">
+                <button class="close-card-btn" onclick="closeCard(event, this)">×</button>
+                <div class="card-front">
+                    <span>🎨</span>
+                    <h2>Hobiler</h2>
+                </div>
+                
+                <div class="card-content">
+                    <div class="widget-menu">
+                        <button class="widget-btn" onclick="showWidgetView(event, this, 'view-cizim')">✏️ Çizim</button>
+                        <button class="widget-btn" onclick="showWidgetView(event, this, 'view-orgu')">🧶 Örgü & Dikiş</button>
+                        <button class="widget-btn" onclick="showWidgetView(event, this, 'view-kitap')">📚 Kitap</button>
+                        <button class="widget-btn" onclick="showWidgetView(event, this, 'view-film')">🎬 Film & Dizi</button>
+                        <button class="widget-btn" onclick="showWidgetView(event, this, 'view-muzik')">🎵 Müzik</button>
+                        <button class="widget-btn" onclick="showWidgetView(event, this, 'view-yemek')">🍳 Yemek</button>
+                    </div>
+
+                    <!-- ÇİZİM (Pano Ekleme) -->
+                    <div class="widget-view" id="view-cizim" style="display: none; text-align: center;">
+                        <button class="back-btn-inner" onclick="goBackToWidgetMenu(event, this)">← Menüye Dön</button>
+                        <div class="kitap-oneri-kapsayici">
+                            <div class="oneri-formu">
+                                <input type="text" placeholder="Pinterest Pano Linkini Yapıştır (Örn: https://pin.it/... )">
+                                <button>Panoyu Ekle</button>
+                            </div>
+                        </div>
+                        <p style="margin-top: 15px; color: #fff;">
+                            <a data-pin-do="embedBoard" data-pin-board-width="400" data-pin-scale-height="240" data-pin-scale-width="80" href="https://www.pinterest.com/zoldiackxxx_15/referans2/"></a>
+                        </p>
+                    </div>
+                    <div class="widget-view" id="view-orgu" style="display: none; text-align: center;">
+                        <button class="back-btn-inner" onclick="goBackToWidgetMenu(event, this)">← Menüye Dön</button>
+                        <p style="margin-top: 30px; font-size: 1.1rem; color: #fff;">
+                            <a data-pin-do="embedBoard" data-pin-board-width="400" data-pin-scale-height="240" data-pin-scale-width="80" href="https://www.pinterest.com/zoldiackxxx_15/örgü/"></a>
+                        </p>
+                    </div>
+
+                    <div class="widget-view" id="view-kitap" style="display: none; text-align: center;">
+                        <button class="back-btn-inner" onclick="goBackToWidgetMenu(event, this)">← Menüye Dön</button>
+                        <p style="margin-top: 20px; font-size: 1.1rem; color: #fff;">
+                            Okuduğun ve başkalarının da okumasını istediğin bir kitabı bizimle paylaş!
+                        </p>
+
+                        <!-- Kitap Öneri Formu ve Listesi -->
+                        <div class="kitap-oneri-kapsayici">
+                            
+                            <!-- Kullanıcının Veri Girdiği Kısım -->
+                            <div class="oneri-formu">
+                                <input type="text" id="kitap-adi" placeholder="Kitap Adı">
+                                <input type="text" id="kitap-yazari" placeholder="Yazarı">
+                                <textarea id="kitap-yorumu-manuel" placeholder="Bu kitabı neden öneriyorsun?" rows="2"></textarea>
+                                <button onclick="kitapOner()">Öner</button>
+                            </div>
+
+                            <!-- Önerilen Kitapların Akacağı Kısım -->
+                            <div class="oneri-listesi" id="oneri-listesi">
+                                <p id="bos-mesaj" style="text-align: center; color: #bbb;">Henüz önerilen kitap yok.</p>
+                            </div>
+                            <div class="oneri-formu">
+                            <!-- Kitap Seçim Açılır Menüsü -->
+                            <select id="kitap-secimi">
+                                <option value="" disabled selected>Bir kitap seç...</option>
+                            </select>
+                            
+                            <textarea id="kitap-yorumu-secim" placeholder="Bu kitap hakkında ne düşünüyorsun?" rows="2"></textarea>
+                            <button onclick="kitapYorumuEkle()">Gönder</button>
+                        </div>
+                        </div>
+                    </div>
+                    <!-- FİLM VE DİZİ -->
+                    <div class="widget-view" id="view-film" style="display: none; text-align: center;">
+                        <button class="back-btn-inner" onclick="goBackToWidgetMenu(event, this)">← Menüye Dön</button>
+                        <div class="kitap-oneri-kapsayici">
+                            <div class="oneri-formu">
+                                <input type="text" placeholder="Film/Dizi Adı">
+                                <textarea placeholder="Bu yapımı neden öneriyorsun?" rows="2"></textarea>
+                                <button>Öner</button>
+                            </div>
+                            <p style="text-align: center; color: #bbb; font-size: 13px;">Henüz önerilen film/dizi yok.</p>
+                        </div>
+                    </div>
+                    <div class="widget-view" id="view-muzik" style="display: none; text-align: center;">
+                        <button class="back-btn-inner" onclick="goBackToWidgetMenu(event, this)">← Menüye Dön</button>
+                        <p style="margin-top: 30px; font-size: 1.1rem; color: #fff;">
+                        <iframe 
+                        data-testid="embed-iframe" 
+                        style="border-radius:12px" 
+                        src="https://open.spotify.com/embed/playlist/4TFa0ZhxdQ71oEMmbJpJVK?utm_source=generator" 
+                        width="100%" 
+                        height="352" 
+                        frameBorder="0" 
+                        allowfullscreen="" 
+                        allow="autoplay; 
+                        clipboard-write; 
+                        encrypted-media; 
+                        fullscreen; picture-in-picture" 
+                        loading="lazy">
+                    </iframe>                        
+                    </p>
+                    </div>
+
+                    <!-- YEMEK -->
+                    <div class="widget-view" id="view-yemek" style="display: none; text-align: center;">
+                        <button class="back-btn-inner" onclick="goBackToWidgetMenu(event, this)">← Menüye Dön</button>
+                        <div class="kitap-oneri-kapsayici">
+                            <div class="oneri-formu">
+                                <input type="text" placeholder="Tarif veya Yemek Adı">
+                                <textarea placeholder="Tarif detayları veya düşüncelerin..." rows="2"></textarea>
+                                <button>Paylaş</button>
+                            </div>
+                            <p style="text-align: center; color: #bbb; font-size: 13px;">Henüz paylaşılan yemek yok.</p>
+                        </div>
+                    </div> 
+               </div>
+            </div>
+            <div class="dash-card" onclick="openCard(this)">
+                <button class="close-card-btn" onclick="closeCard(event, this)">×</button>
+                <div class="card-front">
+                    <span>📝</span>
+                    <h2>Hızlı Notlar</h2>
+                </div>
+                <div class="card-content">
+                    <div class="widget-menu">
+                        <button class="widget-btn" onclick="showWidgetView(event, this, 'view-not-olustur')"> Not Oluştur</button>
+                        <button class="widget-btn" onclick="showWidgetView(event, this, 'view-mevcut-notlar')">📂 Mevcut Notlar</button>
+                        <button class="widget-btn" onclick="showWidgetView(event, this, 'view-el-yazisi-notlar')">✍️ El Yazısı Notları</button>
+                        <button class="widget-btn" onclick="showWidgetView(event, this, 'view-goruntulenen-notlar')"> Görüntülenen Notlar</button>
+                        <a href="{{ url_for('notlar') }}" class="widget-btn" style="text-decoration: none; background: #7e4579; color: white;">Tüm Notlara Git</a>
+                    </div>
+                <div class="widget-view" id="view-not-olustur" style="display: none; text-align: center;">
+                        <button class="back-btn-inner" onclick="goBackToWidgetMenu(event, this)">← Menüye Dön</button>
+                        <textarea placeholder="Hemen bir not oluştur..." style="width: 100%; height: 150px; padding: 10px; border-radius: 8px; border: none; font-size: 14px; font-family: sans-serif;"></textarea>
+                        <button style="margin-top: 10px; background: #4caf50; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold;">Hızlıca Kaydet</button>
+                    </div>
+                    <div class="widget-view" id="view-mevcut-notlar" style="display: none; text-align: center;">
+                        <button class="back-btn-inner" onclick="goBackToWidgetMenu(event, this)">← Menüye Dön</button>
+                        <div style="margin-top: 30px; color: #fff; font-size: 14px;">
+                            Kaydettiğin notların küçük bir önizlemesi burada görünebilir.
+                        </div>
+                        <a href="{{ url_for('notlar') }}" class="go-page-link">Tam Sayfaya Git →</a>
+                    </div>
+                    <div class="widget-view" id="view-el-yazisi-notlar" style="display: none; text-align: center;">
+                        <button class="back-btn-inner" onclick="goBackToWidgetMenu(event, this)">← Menüye Dön</button>
+                        <div style="margin-top: 30px; color: #fff; font-size: 14px;">
+                            El yazısı ile kaydettiğin notların küçük bir önizlemesi burada görünebilir.
+                        </div>
+                        <a href="{{ url_for('notlar') }}" class="go-page-link">Tam Sayfaya Git →</a>
+                    </div>
+                    <div class="widget-view" id="view-goruntulenen-notlar" style="display: none; text-align: center;">
+                        <button class="back-btn-inner" onclick="goBackToWidgetMenu(event, this)">← Menüye Dön</button>
+                        <div style="margin-top: 30px; color: #fff; font-size: 14px;">
+                            En son görüntülediğin notların küçük bir önizlemesi burada görünebilir.
+                        </div>
+                        <a href="{{ url_for('notlar') }}" class="go-page-link">Tam Sayfaya Git →</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dash-card" onclick="openCard(this)">
+                <button class="close-card-btn" onclick="closeCard(event, this)">×</button>
+                <div class="card-front">
+                    <span>📅</span>
+                    <h2>Ajanda</h2>
+                </div>
+                <div class="card-content">
+                    <div class="widget-menu">
+                        <button class="widget-btn" onclick="showWidgetView(event, this, 'view-gunluk-ajanda')">📆 Günlük Ajanda</button>
+                        <button class="widget-btn" onclick="showWidgetView(event, this, 'view-haftalik-ajanda')">🗓️ Haftalık Ajanda</button>
+                        <a href="{{ url_for('ajanda') }}" class="widget-btn" style="text-decoration: none; background: #7e4579; color: white;">Tüm Ajandaya Git</a>
+                    </div>
+                    <div class="widget-view" id="view-gunluk-ajanda" style="display: none; text-align: center;">
+                        <button class="back-btn-inner" onclick="goBackToWidgetMenu(event, this)">← Menüye Dön</button>
+                        <p>Günlük ajandanın küçük bir önizlemesi burada görünebilir.</p>
+                        <a href="{{ url_for('ajanda') }}" class="go-page-link">Tam Sayfaya Git →</a>
+                    </div>
+                    <div class="widget-view" id="view-haftalik-ajanda" style="display: none; text-align: center;">
+                        <button class="back-btn-inner" onclick="goBackToWidgetMenu(event, this)">← Menüye Dön</button>
+                        <p>Haftalık planların ve etkinliklerin burada özet olarak görünebilir.</p>
+                        <a href="{{ url_for('ajanda') }}" class="go-page-link">Tam Sayfaya Git →</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="dash-card" onclick="openCard(this)">
+                <button class="close-card-btn" onclick="closeCard(event, this)">×</button>
+                <div class="card-front">
+                    <span>⏰</span>
+                    <h2>Hatırlatıcı</h2>
+                </div>
+                <div class="card-content">
+                    <div class="widget-menu">
+                        <button class="widget-btn" onclick="showWidgetView(event, this, 'view-gunluk-hatirlatici')">📌 Günlük Hatırlatıcı</button>
+                        <button class="widget-btn" onclick="showWidgetView(event, this, 'view-haftalik-hatirlatici')">📍 Haftalık Hatırlatıcı</button>
+                        <a href="{{ url_for('hatirlatici') }}" class="widget-btn" style="text-decoration: none; background: #7e4579; color: white;">Tüm Hatırlatıcılara Git</a>
+                    </div>
+                    <div class="widget-view" id="view-gunluk-hatirlatici" style="display: none; text-align: center;">
+                        <button class="back-btn-inner" onclick="goBackToWidgetMenu(event, this)">← Menüye Dön</button>
+                        <p>Günlük hatırlatıcıların küçük bir önizlemesi burada görünebilir.</p>
+                        <a href="{{ url_for('hatirlatici') }}" class="go-page-link">Tam Sayfaya Git →</a>
+                    </div>
+                    <div class="widget-view" id="view-haftalik-hatirlatici" style="display: none; text-align: center;">
+                        <button class="back-btn-inner" onclick="goBackToWidgetMenu(event, this)">← Menüye Dön</button>
+                        <p>Haftalık hatırlatıcıların küçük bir önizlemesi burada görünebilir.</p>
+                        <a href="{{ url_for('hatirlatici') }}" class="go-page-link">Tam Sayfaya Git →</a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+<script>
+    let dashPomodoroInterval;
+    let dashPomodoroTimeLeft = 1500; // 25 dakika
+    let dashPomodoroRunning = false;
+    // Yeni eklenecek Mola değişkenleri
+    let dashBreakInterval;
+    let dashBreakTimeLeft = 300; // 5 dakika (5 * 60)
+    let dashBreakRunning = false;
+
+    // Sayfa yüklendiğinde listeyi güncelle
+document.addEventListener('DOMContentLoaded', () => {
+    renderPomodoroHistory();
+});
+
+// Yeni bir seansı kaydetme fonksiyonu
+function saveCompletedPomodoro(duration) {
+    const history = JSON.parse(localStorage.getItem('pomodoroHistory')) || [];
+    
+    const now = new Date();
+    const newEntry = {
+        date: now.toLocaleDateString('tr-TR'), // Örn: 24.05.2024
+        time: now.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }), // Örn: 14:30
+        duration: duration
+    };
+
+    history.unshift(newEntry); // En yeni olanı başa ekle
+    localStorage.setItem('pomodoroHistory', JSON.stringify(history));
+    renderPomodoroHistory();
+}
+
+// Geçmişi ekranda listeleme fonksiyonu
+function renderPomodoroHistory() {
+    const listContainer = document.getElementById('pomodoro-history-list');
+    const history = JSON.parse(localStorage.getItem('pomodoroHistory')) || [];
+
+    if (history.length === 0) {
+        listContainer.innerHTML = '<p style="color: #bbb; text-align: center; font-size: 14px;">Henüz tamamlanmış seans yok.</p>';
+        return;
+    }
+
+    listContainer.innerHTML = history.map(item => `
+        <div style="background: rgba(255,255,255,0.05); margin-bottom: 8px; padding: 10px; border-radius: 8px; border-left: 4px solid #355e36; display: flex; justify-content: space-between; align-items: center;">
+            <div style="text-align: left;">
+                <div style="color: #fff; font-size: 14px; font-weight: bold;">${item.duration} Dakika Çalışma</div>
+                <div style="color: #aaa; font-size: 12px;">${item.date}</div>
+            </div>
+            <div style="color: #d0e3eb; font-weight: bold; font-size: 14px;">${item.time}</div>
+        </div>
+    `).join('');
+}
+
+// Geçmişi silme fonksiyonu
+function clearPomodoroHistory() {
+    if(confirm("Tüm geçmiş silinsin mi?")) {
+        localStorage.removeItem('pomodoroHistory');
+        renderPomodoroHistory();
+    }
+}
+
+    function setDashPomodoroTime(event, btnElement) {
+        event.stopPropagation();
+        if (dashPomodoroRunning) {
+            clearInterval(dashPomodoroInterval);
+            dashPomodoroRunning = false; 
+            const startBtn = btnElement.previousElementSibling;
+            if(startBtn) {
+                startBtn.textContent = "Başlat";
+                startBtn.className = "t-btn start";
+            }
+        }
+        const inputVal = document.getElementById('dash-pomodoro-input').value;
+        let minutes = parseInt(inputVal);
+        if (isNaN(minutes) || minutes <= 0) { minutes = 25; }
+        dashPomodoroTimeLeft = minutes * 60;
+        let displayMinutes = minutes.toString().padStart(2, '0');
+        document.getElementById('dash-pomodoro-display').textContent = `${displayMinutes}:00`;
+    }
+        // ==========================================
+        // 1. YAN MENÜ VE KART FONKSİYONLARI (Mevcut Kodların)
+        // ==========================================
+        function openNav() {
+            document.getElementById("mySidebar").style.width = "250px";
+            document.getElementById("main").style.marginLeft = "250px";
+        }
+        function closeNav() {
+            document.getElementById("mySidebar").style.width = "0";
+            document.getElementById("main").style.marginLeft = "0";
+        }
+        function toggleNav(event) {
+            event.stopPropagation(); 
+            var s = document.getElementById("mySidebar");
+            if (s.style.width === "250px") { closeNav(); } else { openNav(); }
+        }
+
+        // KART İÇİ AÇILMA FONKSİYONLARI
+        function openCard(cardElement) {
+            if (cardElement.classList.contains('active')) return;
+
+            document.querySelectorAll('.dash-card').forEach(card => {
+                card.classList.remove('active');
+            });
+
+            cardElement.classList.add('active');
+        }
+
+        function closeCard(event, btnElement) {
+            event.stopPropagation(); 
+            btnElement.closest('.dash-card').classList.remove('active');
+        }
+
+        // Menü dışına tıklanınca yan menüyü kapatma
+        window.onclick = function(event) {
+            var s = document.getElementById("mySidebar");
+            if (s.style.width === "250px" && !s.contains(event.target) && !event.target.classList.contains('openbtn')) {
+                closeNav();
+            }
+        }
+
+        // ==========================================
+        // 2. KART İÇİ WIDGET (MENÜ VE SAYAÇ) MANTIĞI (Yeni Eklenen)
+        // ==========================================
+
+        // --- Menü Geçişleri ---
+        function showWidgetView(event, btnElement, viewId) {
+            event.stopPropagation(); // Kartın kapanmasını engeller
+            const content = btnElement.closest('.card-content');
+            
+            // Ana menüyü gizle
+            const mainMenu = content.querySelector('.widget-menu');
+            if(mainMenu) mainMenu.style.display = 'none';
+            
+            // Tüm alt görünümleri gizle
+            const views = content.querySelectorAll('.widget-view');
+            views.forEach(v => v.style.display = 'none');
+            
+            // İstenilen görünümü aç
+            const targetView = content.querySelector('#' + viewId);
+            if(targetView) targetView.style.display = 'block';
+        }
+
+        function goBackToWidgetMenu(event, btnElement) {
+            event.stopPropagation();
+            const content = btnElement.closest('.card-content');
+            
+            // Açık olan tüm görünümleri gizle
+            const views = content.querySelectorAll('.widget-view');
+            views.forEach(v => v.style.display = 'none');
+            
+            // Ana menüyü göster
+            const mainMenu = content.querySelector('.widget-menu');
+            if(mainMenu) mainMenu.style.display = 'flex';
+        }
+
+        // --- Ana Sayfa Mini Pomodoro ---
+        let dashPomoInterval;
+        let dashPomoTimeLeft = 1500; // 25 dk
+        let dashPomoRunning = false;
+
+        function toggleDashPomodoro(event, btnElement) {
+            event.stopPropagation();
+            if (dashPomoRunning) {
+                // Duraklat
+                clearInterval(dashPomoInterval);
+                btnElement.textContent = "Devam Et";
+                btnElement.className = "t-btn start";
+                dashPomoRunning = false;
+            } else {
+                // Başlat
+                dashPomoRunning = true;
+                btnElement.textContent = "Duraklat";
+                btnElement.className = "t-btn pause";
+                dashPomoInterval = setInterval(() => {
+                    if (dashPomoTimeLeft > 0) {
+                        dashPomoTimeLeft--;
+                        let m = Math.floor(dashPomoTimeLeft / 60).toString().padStart(2, '0');
+                        let s = (dashPomoTimeLeft % 60).toString().padStart(2, '0');
+                        document.getElementById('dash-pomodoro-display').textContent = `${m}:${s}`;
+                    } else {
+                        clearInterval(dashPomoInterval);
+                        dashPomoRunning = false;
+                        btnElement.textContent = "Başlat";
+                        btnElement.className = "t-btn start";
+                        alert("Süre doldu! Mola sayacı otomatik başlıyor. ☕");
+                        // O anki inputtaki süreyi alıp geçmişe kaydeder
+                        const inputVal = document.getElementById('dash-pomodoro-input').value;
+                        saveCompletedPomodoro(parseInt(inputVal) || 25);
+                        
+                        // Mola sayacını otomatik başlat
+                        const breakBtn = document.getElementById('dash-break-start-btn');
+                        if (!dashBreakRunning && breakBtn) {
+                            toggleDashBreak(null, breakBtn);                    
+                        }
+                    }
+                }, 1000);
+            }
+        }
+
+        function resetDashPomodoro(event, btnElement) {
+            event.stopPropagation();
+            if (dashPomoRunning) {
+                clearInterval(dashPomoInterval);
+                dashPomoRunning = false; 
+                const startBtn = btnElement.previousElementSibling;
+                if(startBtn) {
+                    startBtn.textContent = "Başlat";
+                    startBtn.className = "t-btn start";
+                }
+            }
+            const inputVal = document.getElementById('dash-pomodoro-input').value;
+            let minutes = parseInt(inputVal);
+            if (isNaN(minutes) || minutes <= 0) { minutes = 25; }
+            dashPomoTimeLeft = minutes * 60;
+            let displayMinutes = minutes.toString().padStart(2, '0');
+            document.getElementById('dash-pomodoro-display').textContent = `${displayMinutes}:00`;
+        }
+        function setDashBreakTime(event, btnElement) {
+            event.stopPropagation();
+            if (dashBreakRunning) {
+                clearInterval(dashBreakInterval);
+                dashBreakRunning = false; 
+                const startBtn = btnElement.previousElementSibling;
+                if(startBtn) {
+                    startBtn.textContent = "Başlat";
+                    startBtn.className = "t-btn start";
+                }
+            }
+            const inputVal = document.getElementById('dash-break-input').value;
+            let minutes = parseInt(inputVal);
+            if (isNaN(minutes) || minutes <= 0) { minutes = 5; }
+            dashBreakTimeLeft = minutes * 60;
+            let displayMinutes = minutes.toString().padStart(2, '0');
+            document.getElementById('dash-break-display').textContent = `${displayMinutes}:00`;
+        }
+        function toggleDashBreak(event, btnElement) {
+            event.stopPropagation();
+            if (dashBreakRunning) {
+                clearInterval(dashBreakInterval);
+                btnElement.textContent = "Başlat";
+                btnElement.className = "t-btn start";
+                dashBreakRunning = false;
+            } else {
+                dashBreakRunning = true;
+                btnElement.textContent = "Duraklat";
+                btnElement.className = "t-btn pause";
+                
+                dashBreakInterval = setInterval(() => {
+                    if (dashBreakTimeLeft > 0) {
+                        dashBreakTimeLeft--;
+                        let m = Math.floor(dashBreakTimeLeft / 60).toString().padStart(2, '0');
+                        let s = (dashBreakTimeLeft % 60).toString().padStart(2, '0');
+                        document.getElementById('dash-break-display').textContent = `${m}:${s}`;
+                    } else {
+                        clearInterval(dashBreakInterval);
+                        dashBreakRunning = false;
+                        btnElement.textContent = "Başlat";
+                        btnElement.className = "t-btn start";
+                        alert("Mola bitti! Pomodoro sayacı otomatik başlıyor. 🍅");
+                        
+                        // Pomodoro sayacını otomatik başlat
+                        const pomoBtn = document.querySelector('#view-pomodoro .t-btn.start');
+                        if (!dashPomoRunning && pomoBtn) {
+                            toggleDashPomodoro(null, pomoBtn);                    
+                        }
+                    }
+                }, 1000);
+            }
+        }
+        function resetDashBreak(event, btnElement) {
+            event.stopPropagation();
+            clearInterval(dashBreakInterval);
+            dashBreakRunning = false;
+            const inputVal = document.getElementById('dash-break-input').value;
+            let minutes = parseInt(inputVal);
+            if (isNaN(minutes) || minutes <= 0) { minutes = 5; }
+            dashBreakTimeLeft = minutes * 60;
+            let displayMinutes = minutes.toString().padStart(2, '0');
+            document.getElementById('dash-break-display').textContent = `${displayMinutes}:00`;
+
+            const startBtn = btnElement.previousElementSibling;
+            if(startBtn) {
+                startBtn.textContent = "Başlat";
+                startBtn.className = "t-btn start";
+            }
+        }
+
+        // --- Ana Sayfa Mini Kronometre ---
+        let dashChronoInterval;
+        let dashChronoSeconds = 0;
+        let dashChronoRunning = false;
+
+        function toggleDashChrono(event, btnElement) {
+            event.stopPropagation();
+            if (dashChronoRunning) {
+                clearInterval(dashChronoInterval);
+                btnElement.textContent = "Devam Et";
+                btnElement.className = "t-btn start";
+                dashChronoRunning = false;
+            } else {
+                dashChronoRunning = true;
+                btnElement.textContent = "Duraklat";
+                btnElement.className = "t-btn pause";
+                
+                dashChronoInterval = setInterval(() => {
+                    dashChronoSeconds++;
+                    let m = Math.floor(dashChronoSeconds / 60).toString().padStart(2, '0');
+                    let s = (dashChronoSeconds % 60).toString().padStart(2, '0');
+                    document.getElementById('dash-chrono-display').textContent = `${m}:${s}`;
+                }, 1000);
+            }
+        }
+
+        function resetDashChrono(event, btnElement) {
+            event.stopPropagation();
+            clearInterval(dashChronoInterval);
+            dashChronoRunning = false;
+            dashChronoSeconds = 0;
+            document.getElementById('dash-chrono-display').textContent = "00:00";
+            
+            const startBtn = btnElement.previousElementSibling;
+            if(startBtn) {
+                startBtn.textContent = "Başlat";
+                startBtn.className = "t-btn start";
+            }
+        }
+        // Ortak Ekleme Fonksiyonu: Kodu tekrar etmemek için listeye ekleme işini tek yerde yapıyoruz
+function listeyeEkle(baslikHTML, yorumMetni) {
+    const liste = document.getElementById('oneri-listesi');
+    const bosMesaj = document.getElementById('bos-mesaj');
+    
+    // "Henüz önerilen kitap yok" yazısını gizle
+    if (bosMesaj && bosMesaj.style.display !== 'none') {
+        bosMesaj.style.display = 'none';
+    }
+
+    const yeniDiv = document.createElement('div');
+    yeniDiv.className = 'tekil-oneri';
+    
+    let icerik = baslikHTML;
+    if (yorumMetni && yorumMetni !== "") {
+        icerik += `<p>${yorumMetni}</p>`;
+    }
+    
+    yeniDiv.innerHTML = icerik;
+    liste.prepend(yeniDiv); // Yeni elemanı en üste ekler
+}
+
+// 1. Üstteki Manuel Formun Butonu
+function kitapOner() {
+    const ad = document.getElementById('kitap-adi').value.trim();
+    const yazar = document.getElementById('kitap-yazari').value.trim();
+    const yorum = document.getElementById('kitap-yorumu-manuel').value.trim();
+
+    if (ad !== "" && yazar !== "") {
+        listeyeEkle(`<strong>${ad}</strong> - <em>${yazar}</em>`, yorum);
+        // Formu temizle
+        document.getElementById('kitap-adi').value = "";
+        document.getElementById('kitap-yazari').value = "";
+        document.getElementById('kitap-yorumu-manuel').value = "";
+    } else {
+        alert("Lütfen en azından kitap adını ve yazarını girin!");
+    }
+}
+
+// 2. Ortadaki Hızlı Giriş (Marul) Butonu
+function yorumEkleMarul() {
+    const input = document.getElementById('yorum-input-marul');
+    const metin = input.value.trim();
+
+    if (metin !== "") {
+        listeyeEkle(`<strong>Hızlı Öneri:</strong>`, metin);
+        input.value = ""; // Formu temizle
+    }
+}
+function yorumEkle() {
+    const input = document.getElementById('yorum-input');
+    const metin = input.value.trim();
+    const liste = document.getElementById('yorumlar-listesi');
+
+    if (metin !== "") {
+        // "Henüz yorum yok" yazısını gizle
+        const bosMesaj = liste.querySelector('p');
+        if (bosMesaj) bosMesaj.style.display = 'none';
+
+        const yeniDiv = document.createElement('div');
+        yeniDiv.style.marginBottom = "8px";
+        yeniDiv.style.borderBottom = "1px solid rgba(255,255,255,0.2)";
+        yeniDiv.style.paddingBottom = "5px";
+        yeniDiv.innerHTML = `<strong>Sen:</strong> ${metin}`;
+        
+        liste.prepend(yeniDiv);
+        input.value = ""; 
+    }
+}
+
+// 3. Alttaki Açılır Menü Butonu
+function kitapYorumuEkle() {
+    const secimKutusu = document.getElementById('kitap-secimi');
+    const yorumKutusu = document.getElementById('kitap-yorumu-secim');
+    
+    const secilenKitap = secimKutusu.value;
+    const yorum = yorumKutusu.value.trim();
+
+    if (secilenKitap !== "" && yorum !== "") {
+        listeyeEkle(`<strong>${secilenKitap}</strong>`, yorum);
+        // Formu temizle
+        secimKutusu.value = "";
+        yorumKutusu.value = "";
+    } else {
+        alert("Lütfen menüden bir kitap seçin ve yorumunuzu yazın!");
+    }
+}
+    </script>
+    <script async defer src="https://assets.pinterest.com/js/pinit.js"></script>
+</body>
+</html>

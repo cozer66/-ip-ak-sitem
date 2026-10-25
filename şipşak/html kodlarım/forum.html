@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <title>Forum Widget</title>
+    
+    <style>
+        /* SADECE FORUMA ÖZEL KORUMALI STİLLER */
+        .site-forum-container {
+            width: 100%;
+            background-color: #2b2727; 
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            color: #ffffff;
+            box-sizing: border-box;
+        }
+
+        .forum-header {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #f5c1ec;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 10px;
+        }
+
+        .forum-mesajlar {
+            max-height: 150px;
+            overflow-y: auto;
+            background-color: #1f1b1b;
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .forum-mesaj {
+            font-size: 14px;
+            color: #e0e0e0;
+            background: #2b2727;
+            padding: 8px 12px;
+            border-radius: 8px;
+            word-break: break-word;
+        }
+
+        .mesaj-yazar {
+            color: #f5c1ec;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        /* --- TAŞMAYI ENGELLEYEN FORM YAPISI --- */
+        .forum-form {
+            display: flex !important;
+            gap: 8px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+
+        .forum-form input,
+        .forum-form button {
+            box-sizing: border-box !important;
+            padding: 10px !important;
+            border-radius: 8px !important;
+            font-size: 14px !important;
+            outline: none !important;
+            border: 1px solid #444 !important;
+        }
+
+        #forum-kullanici-adi {
+            flex: 0 0 75px !important; 
+            width: 75px !important;
+            min-width: 0 !important;
+            background-color: #f5c1ec !important;
+            color: #333 !important;
+        }
+
+        #forum-input {
+            flex: 1 1 auto !important; 
+            min-width: 0 !important; /* Ekran daralınca butonun taşmasını engeller */
+            background-color: #f5c1ec !important;
+            color: #333 !important;
+        }
+
+        .forum-form button {
+            flex: 0 0 auto !important; 
+            background-color: #007bff !important;
+            color: white !important;
+            font-weight: bold !important;
+            border: none !important;
+            cursor: pointer !important;
+            white-space: nowrap !important; /* Yazının alt satıra düşmesini engeller */
+            transition: background 0.2s;
+        }
+
+        .forum-form button:hover {
+            background-color: #0056b3 !important;
+        }
+    </style>
+</head>
+<body>
+
+<div class="site-forum-container">
+    <div class="forum-header">
+        <span>💬</span> Herkesin Odası (Canlı Sohbet)
+    </div>
+    
+    <div id="forum-mesaj-listesi" class="forum-mesajlar">
+        <div class="forum-mesaj">
+            <span class="mesaj-yazar">Admin:</span> Herkese selam! Proje harika gidiyor. 🚀
+        </div>
+        <div class="forum-mesaj">
+            <span class="mesaj-yazar">Misafir:</span> Tasarımlar çok şık olmuş eline sağlık!
+        </div>
+    </div>
+
+    <!-- Inline style silindi, boyutlandırma yukarıdaki CSS'e bırakıldı -->
+    <div class="forum-form">
+        <input type="text" id="forum-kullanici-adi" placeholder="Adınız..." value="Admin">
+        <input type="text" id="forum-input" placeholder="Mesajınızı yazın..." onkeypress="mesajKontrol(event)">
+        <button onclick="mesajGonder()">Gönder</button>
+    </div>
+</div>
+
+<script>
+    function mesajGonder() {
+        const input = document.getElementById('forum-input');
+        const yazarInput = document.getElementById('forum-kullanici-adi');
+        const liste = document.getElementById('forum-mesaj-listesi');
+        
+        const mesajMetni = input.value.trim();
+        const yazarAdi = yazarInput.value.trim() || "Misafir";
+
+        if (mesajMetni === "") return;
+
+        const yeniMesaj = document.createElement('div');
+        yeniMesaj.classList.add('forum-mesaj');
+        yeniMesaj.innerHTML = `<span class="mesaj-yazar">${yazarAdi}:</span> ${mesajMetni}`;
+        
+        liste.appendChild(yeniMesaj);
+        liste.scrollTop = liste.scrollHeight;
+        input.value = "";
+    }
+
+    function mesajKontrol(event) {
+        if (event.key === "Enter") {
+            mesajGonder();
+        }
+    }
+</script>
+
+</body>
+</html>

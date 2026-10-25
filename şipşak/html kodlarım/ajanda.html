@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <title>Ajanda</title>
+    <!-- Kendi stil dosyan -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    
+    <style>
+        /* --- GENİŞLEYEN KART STİLLERİ --- */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .dash-card {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .islem-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .islem-karti {
+            background-color: #2b2727; 
+            border-radius: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .islem-karti.acik {
+            grid-column: 1 / -1; 
+            background-color: #e29191; 
+            box-shadow: 0 8px 16px rgba(226, 145, 145, 0.4);
+        }
+
+        /* KARTIN ÖN YÜZÜ */
+        .kart-on {
+            color: #ffffff;
+            padding: 30px 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            height: 100%;
+            box-sizing: border-box;
+        }
+
+        .kart-on:hover {
+            background-color: #3a3535;
+        }
+
+        .islem-karti.acik .kart-on { display: none; }
+
+        .kart-on .ikon {
+            font-size: 45px;
+            margin-bottom: 10px;
+        }
+
+        .kart-on .baslik {
+            font-size: 15px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        /* KARTIN ARKA YÜZÜ */
+        .kart-arka {
+            display: none; 
+            padding: 25px;
+            color: #333;
+        }
+
+        .islem-karti.acik .kart-arka {
+            display: block; 
+            animation: icerikBelir 0.4s ease forwards;
+        }
+
+        @keyframes icerikBelir {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .kart-kapat-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
+            opacity: 0.6;
+            z-index: 10;
+        }
+
+        .kart-kapat-btn:hover { opacity: 1; }
+
+        .kart-arka h2 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #f5c1ec;
+            padding-bottom: 10px;
+            color: #183a0d;
+        }
+        
+        .kart-arka p {
+            font-size: 16px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dash-card">
+        <a href="/" style="text-decoration: none; color: #666; font-size: 14px;">← Ana Sayfaya Dön</a>
+        
+        <h1 style="font-size: 22px; margin-top: 15px; color: #333;">Gününüzü nasıl planlamak istiyorsunuz?</h1>
+        
+        <div class="islem-grid">
+
+            <!-- GÜNLÜK PLAN KARTI -->
+            <div class="islem-karti" id="kart-gunluk">
+                <div class="kart-on" onclick="kartiAc('kart-gunluk')">
+                    <div class="ikon">🌅</div>
+                    <div class="baslik">Günlük Plan</div>
+                </div>
+                <div class="kart-arka">
+                    <button class="kart-kapat-btn" onclick="kartiKapat(event, 'kart-gunluk')">✖</button>
+                    <h2>Bugünün Planı</h2>
+                    <p>Günlük planlarınızı buraya ekleyebileceğiniz bir form veya liste gelecek.</p>
+                </div>
+            </div>
+
+            <!-- HAFTALIK PLAN KARTI -->
+            <div class="islem-karti" id="kart-haftalik">
+                <div class="kart-on" onclick="kartiAc('kart-haftalik')">
+                    <div class="ikon">📅</div>
+                    <div class="baslik">Haftalık Plan</div>
+                </div>
+                <div class="kart-arka">
+                    <button class="kart-kapat-btn" onclick="kartiKapat(event, 'kart-haftalik')">✖</button>
+                    <h2>Bu Haftanın Hedefleri</h2>
+                    <p>Haftalık planlarınızı ve önemli günleri burada görebileceksiniz.</p>
+                </div>
+            </div>
+
+            <!-- AYLIK PLAN KARTI -->
+            <div class="islem-karti" id="kart-aylik">
+                <div class="kart-on" onclick="kartiAc('kart-aylik')">
+                    <div class="ikon">🗓️</div>
+                    <div class="baslik">Aylık Plan</div>
+                </div>
+                <div class="kart-arka">
+                    <button class="kart-kapat-btn" onclick="kartiKapat(event, 'kart-aylik')">✖</button>
+                    <h2>Aylık Görünüm</h2>
+                    <p>İleride buraya küçük bir takvim görünümü eklenebilir.</p>
+                </div>
+            </div>
+
+            <!-- YILLIK PLAN KARTI -->
+            <div class="islem-karti" id="kart-yillik">
+                <div class="kart-on" onclick="kartiAc('kart-yillik')">
+                    <div class="ikon">🌍</div>
+                    <div class="baslik">Yıllık Plan</div>
+                </div>
+                <div class="kart-arka">
+                    <button class="kart-kapat-btn" onclick="kartiKapat(event, 'kart-yillik')">✖</button>
+                    <h2>Yıllık Hedefler</h2>
+                    <p>Yıl boyunca ulaşmak istediğiniz uzun vadeli hedefler burada yer alacak.</p>
+                </div>
+            </div>
+
+            <!-- AJANDA TAKİBİ KARTI -->
+            <div class="islem-karti" id="kart-takip">
+                <div class="kart-on" onclick="kartiAc('kart-takip')">
+                    <div class="ikon">📔</div>
+                    <div class="baslik">Ajanda Takibi</div>
+                </div>
+                <div class="kart-arka">
+                    <button class="kart-kapat-btn" onclick="kartiKapat(event, 'kart-takip')">✖</button>
+                    <h2>Genel Ajanda</h2>
+                    <p>Tüm notlarınızı ve programınızı tek bir yerden takip edebileceğiniz alan.</p>
+                </div>
+            </div>
+
+            <!-- TAMAMLANANLAR KARTI -->
+            <div class="islem-karti" id="kart-tamamlanan">
+                <div class="kart-on" onclick="kartiAc('kart-tamamlanan')">
+                    <div class="ikon">✅</div>
+                    <div class="baslik">Tamamlananlar</div>
+                </div>
+                <div class="kart-arka">
+                    <button class="kart-kapat-btn" onclick="kartiKapat(event, 'kart-tamamlanan')">✖</button>
+                    <h2>Biten Etkinlikler</h2>
+                    <p>Başarıyla bitirdiğin tüm görevler ve etkinlikler burada listelenecek. Harika iş!</p>
+                </div>
+            </div>
+
+            <!-- TAMAMLANMAMIŞLAR KARTI -->
+            <div class="islem-karti" id="kart-tamamlanmamis">
+                <div class="kart-on" onclick="kartiAc('kart-tamamlanmamis')">
+                    <div class="ikon">⏳</div>
+                    <div class="baslik">Devam Edenler</div>
+                </div>
+                <div class="kart-arka">
+                    <button class="kart-kapat-btn" onclick="kartiKapat(event, 'kart-tamamlanmamis')">✖</button>
+                    <h2>Tamamlanmamış Etkinlikler</h2>
+                    <p>Henüz bitmeyen veya süresi geçmiş etkinlikleri buradan kontrol edebilirsin.</p>
+                </div>
+            </div>
+
+        </div> <!-- İzlem Grid Sonu -->
+    </div> <!-- Dash Card Sonu -->
+
+    <script>
+        // Kartı açan fonksiyon
+        function kartiAc(kartId) {
+            document.querySelectorAll('.islem-karti').forEach(kart => {
+                kart.classList.remove('acik');
+            });
+            document.getElementById(kartId).classList.add('acik');
+        }
+
+        // Kartı kapatan fonksiyon
+        function kartiKapat(event, kartId) {
+            event.stopPropagation(); 
+            document.getElementById(kartId).classList.remove('acik');
+        }
+    </script>
+    {% include 'forum.html' %}
+</body>
+</html>

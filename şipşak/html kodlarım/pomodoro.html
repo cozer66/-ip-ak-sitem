@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <title>Çalışma Alanı - Pomodoro</title>
+    <!-- Senin kendi ana CSS dosyan duruyor -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        
+/* =================================================== */
+/* 7. POMODORO İŞLEM KARTLARI                          */
+/* =================================================== */
+
+.pomodoro-sayfasi {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 30px; /* Kart ve forum arasındaki boşluk */
+  box-sizing: border-box;
+}
+/* Küçük ekranda forum margin iptali (Boşluğu 'gap' ayarlayacak) */
+.pomodoro-sayfasi .site-forum-container {
+  margin: 0; 
+}
+
+/* 2. BÜYÜK EKRANLAR (Sekme büyüdüğünde - Yan Yana) */
+@media (min-width: 750px) {
+  .pomodoro-sayfasi {
+    flex-direction: row; /* İçerikleri yan yana dizer */
+    align-items: flex-start; /* İki kutuyu yukarıdan eşit hizalar */
+  }
+  
+  /* Yan yana geldiklerinde forum kutusu çok yer kaplamasın diye genişliğini daraltıyoruz */
+  .pomodoro-sayfasi .site-forum-container {
+    max-width: 450px; 
+  }
+}
+
+.islem-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 15px;
+    margin-top: 25px;
+}
+
+.islem-karti {
+    background-color: #2b2727; 
+    border-radius: 16px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    overflow: hidden;
+    position: relative;
+}
+
+.islem-karti.acik {
+    grid-column: 1 / -1; 
+    background-color: #e29191; /* Arka plan genişleyince alacağı renk */
+    box-shadow: 0 8px 16px rgba(226, 145, 145, 0.4);
+}
+
+/* KARTIN ÖN YÜZÜ */
+.kart-on {
+    color: #ffffff;
+    padding: 30px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.kart-on:hover {
+    background-color: #3a3535;
+}
+
+.islem-karti.acik .kart-on { 
+    display: none; 
+}
+
+.kart-on .ikon {
+    font-size: 45px;
+    margin-bottom: 10px;
+}
+
+.kart-on .baslik {
+    font-size: 15px;
+    font-weight: bold;
+}
+
+/* KARTIN ARKA YÜZÜ (Genişlediğinde açılan kısım) */
+.kart-arka {
+    display: none; 
+    padding: 25px;
+    color: #333;
+}
+
+.islem-karti.acik .kart-arka {
+    display: block; 
+    animation: icerikBelir 0.4s ease forwards;
+}
+
+@keyframes icerikBelir {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.kart-kapat-btn {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: rgba(0, 0, 0, 0.2); /* Butonun arkasına hafif transparan siyah yuvarlak ekler */
+    border: none;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%; /* Tam yuvarlak yapar */
+    font-size: 16px;
+    color: #ffffff; /* Çarpıyı beyaz yaparak okunaklı olmasını sağlar */
+    cursor: pointer;
+    z-index: 50; /* Diğer her şeyin üstünde durmasını garantiler */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.3s;
+}
+
+.kart-kapat-btn:hover { 
+    background: rgba(0, 0, 0, 0.5); /* Üzerine gelince belirginleşir */
+    opacity: 1; 
+}
+.kart-kapat-btn:hover { 
+    opacity: 1; 
+}
+
+.kart-arka h2 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #f5c1ec;
+    padding-bottom: 10px;
+}
+    </style>
+</head>
+<body>
+<div id="main" class="pomodoro-sayfasi">
+    <div class="dash-card">
+        <a href="/" style="text-decoration: none; color: #666; font-size: 14px;">← Ana Sayfaya Dön</a>
+        
+        <h1 style="font-size: 22px; margin-top: 15px;">Nasıl çalışmak istiyorsunuz?</h1>
+        
+        <!-- YENİ GENİŞLEYEN KART YAPISI -->
+        <div class="islem-grid">
+
+            <!-- 1. POMODORO KARTI -->
+            <div class="islem-karti" id="kart-pomodoro">
+                <div class="kart-on" onclick="kartiAc('kart-pomodoro')">
+                    <div class="ikon">🍅</div>
+                    <div class="baslik">Pomodoro</div>
+                </div>
+                
+                <div class="kart-arka">
+                    <button class="kart-kapat-btn" onclick="kartiKapat(event, 'kart-pomodoro')">✖</button>
+                    
+                    <!-- Senin Pomodoro HTML Kodların -->
+                    <div class="pomodoro-wrapper">
+                        <!-- ÇALIŞMA SAYACI KUTUSU -->
+                        <div class="pomodoro-box">
+                            <h2>Çalışma 🍅</h2>
+                            <div class="input-group">
+                                <label for="pomodoro-duration">Süre (dk): </label>
+                                <input type="number" id="pomodoro-duration" value="25" min="1" max="60" style="width: 50px; padding: 5px;">
+                                <button onclick="setTime()" class="t-btn start" style="padding: 5px 10px; background: #355e36;">Ayarla</button>
+                            </div>
+                            <div id="timer-display" class="timer-display" style="font-size: 40px; font-weight: bold; margin: 15px 0;">25:00</div>
+                            <div class="timer-controls">
+                                <button id="main-btn" onclick="toggleTimer()" class="t-btn start" style="background: #355e36; color: white; padding: 10px; border:none; border-radius:5px; cursor:pointer;">Başlat</button>
+                                <button id="secondary-btn" onclick="handleSecondaryAction()" class="t-btn reset" style="background: #834844; color: white; padding: 10px; border:none; border-radius:5px; cursor:pointer;">Sıfırla</button>
+                            </div>
+                        </div>
+
+                        <hr style="border: 0; height: 1px; background: #f5c1ec; margin: 20px 0;">
+
+                        <!-- MOLA SAYACI KUTUSU -->
+                        <div class="mola-box">
+                            <h2>Mola ☕</h2>
+                            <div class="input-group">
+                                <label for="break-duration">Süre (dk): </label>
+                                <input type="number" id="break-duration" value="5" min="1" max="30" style="width: 50px; padding: 5px;">
+                                <button onclick="setBreakTime()" class="t-btn start" style="background: #475c6e; color: white; padding: 5px 10px; border:none;">Ayarla</button>
+                            </div>
+                            <div id="break-timer-display" class="timer-display" style="font-size: 40px; font-weight: bold; margin: 15px 0;">05:00</div>
+                            <div class="timer-controls">
+                                <button id="break-main-btn" onclick="toggleBreakTimer()" class="t-btn start" style="background: #475c6e; color: white; padding: 10px; border:none; border-radius:5px; cursor:pointer;">Başlat</button>
+                                <button id="break-secondary-btn" onclick="resetBreakTimer()" class="t-btn reset" style="background: #834844; color: white; padding: 10px; border:none; border-radius:5px; cursor:pointer;">Sıfırla</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Tamamlanan Turlar Kısmı -->
+                    <div id="lap-list" style="margin-top: 20px; font-size: 14px; color: #555;"></div>
+                    <div id="completed-container" style="margin-top: 20px; border-top: 2px solid #eee; padding-top: 15px;">
+                        <button onclick="toggleCompletedList()" style="background: #475c6e; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-size: 12px;">
+                            Tamamlanan Pomodorolar
+                        </button>
+                        <div id="completed-sessions" style="display: none; margin-top: 10px; background: #f9f9f9; padding: 10px; border-radius: 5px;">
+                            <ul id="session-log" style="text-align: left; font-size: 13px; color: #333; padding-left:0; list-style:none;"></ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. KRONOMETRE KARTI -->
+            <div class="islem-karti" id="kart-kronometre">
+                <div class="kart-on" onclick="kartiAc('kart-kronometre')">
+                    <div class="ikon">⏱️</div>
+                    <div class="baslik">Kronometre</div>
+                </div>
+                
+                <div class="kart-arka">
+                    <button class="kart-kapat-btn" onclick="kartiKapat(event, 'kart-kronometre')">✖</button>
+                    <h2>Kronometre</h2>
+                    <div id="chrono-display" style="font-size: 48px; font-weight: bold; text-align: center; margin: 20px 0;">00:00</div>
+                    <div id="chrono-buttons" style="display:flex; justify-content:center; flex-wrap:wrap; gap:10px;">
+                        <button id="chrono-start" onclick="startChrono()" style="background: #396639; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius:5px; cursor: pointer;">Başlat</button>
+                        <button id="chrono-stop" onclick="stopChrono()" style="background: #834844; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius:5px; cursor: pointer;">Durdur</button>
+                        <button id="chrono-reset" onclick="resetChrono()" style="background: #555555; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius:5px; cursor: pointer;">Sıfırla</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. DOMATES KARTI -->
+            <div class="islem-karti" id="kart-domates">
+                <div class="kart-on" onclick="kartiAc('kart-domates')">
+                    <div class="ikon">🍅</div>
+                    <div class="baslik">Domates</div>
+                </div>
+                <div class="kart-arka">
+                    <button class="kart-kapat-btn" onclick="kartiKapat(event, 'kart-domates')">✖</button>
+                    <h2>Domates 🍅</h2>
+                    <p style="font-size:16px;">Kelin ilacı olsa kendi kafasına sürermiş!</p>
+                </div>
+            </div>
+
+            <!-- 4. MARUL KARTI -->
+            <div class="islem-karti" id="kart-marul">
+                <div class="kart-on" onclick="kartiAc('kart-marul')">
+                    <div class="ikon">🥬</div>
+                    <div class="baslik">Marul</div>
+                </div>
+                <div class="kart-arka">
+                    <button class="kart-kapat-btn" onclick="kartiKapat(event, 'kart-marul')">✖</button>
+                    <h2>Marul 🥬</h2>
+                    <p style="font-size:16px;">Hızlı giden atın boku seyrek düşermiş!</p>
+                </div>
+            </div>
+
+        </div> <!-- İzlem Grid Sonu -->
+    </div> <!-- Dash Card Sonu -->
+    {% include 'forum.html' %}
+
+</div> <!-- Pomodoro Sayfası Sonu -->
+    <script>
+        // --- YENİ EKLENEN ARAYÜZ FONKSİYONLARI ---
+        function kartiAc(kartId) {
+            document.querySelectorAll('.islem-karti').forEach(kart => {
+                kart.classList.remove('acik');
+            });
+            document.getElementById(kartId).classList.add('acik');
+        }
+
+        function kartiKapat(event, kartId) {
+            event.stopPropagation(); 
+            document.getElementById(kartId).classList.remove('acik');
+        }
+
+        // --- SENİN KENDİ JAVASCRIPT KODLARIN (Tamamen Aynı) ---
+        let countdown; 
+        let secondsLeft;
+        let isPaused = true;
+        let isStarted = false;
+        let totalInitialSeconds = 0; 
+        let totalPomodoros = 0;      
+        let breakCountdown;
+        let breakSecondsLeft= 300; 
+        let isBreakPaused = true;
+        let isBreakStarted = false;
+
+        const timerDisplay = document.getElementById('timer-display');
+        const timeInput = document.getElementById('pomodoro-duration');
+        const mainBtn = document.getElementById('main-btn');
+        const secondaryBtn = document.getElementById('secondary-btn');
+        const lapList = document.getElementById('lap-list');
+        const breakTimerDisplay = document.getElementById('break-timer-display');
+        const breakTimeInput = document.getElementById('break-duration');
+        const breakMainBtn = document.getElementById('break-main-btn');
+
+        function toggleTimer() {
+            if (!isStarted) {
+                startTimer();
+            } else if (isPaused) { 
+                startTimer();
+            } else {
+                pauseTimer();
+            }
+        }
+        function toggleCompletedList() {
+            const list = document.getElementById('completed-sessions');
+            if (list.style.display === "none") {
+                list.style.display = "block";
+            } else {
+                list.style.display = "none";
+            }
+        }
+
+        function setTime() {
+            const duration = parseInt(timeInput.value);
+            if (isNaN(duration) || duration <= 0) {
+                alert("Lütfen geçerli bir süre girin!");
+                return;
+            }
+            secondsLeft = duration * 60;
+            totalInitialSeconds = secondsLeft;
+            updateTimerDisplay();
+        }
+
+        function startTimer() {
+            if (isPaused) {
+                if (!isStarted) {
+                    const duration = parseInt(timeInput.value);
+                    if (isNaN(duration) || duration <= 0) {
+                        alert("Lütfen geçerli bir süre girin!");
+                        return;
+                    }
+                    secondsLeft = duration * 60;
+                    totalInitialSeconds = secondsLeft;
+                    isStarted = true;
+                }
+
+                isPaused = false;
+                mainBtn.textContent = "Duraklat";
+                mainBtn.style.background = "#ff9800";
+                secondaryBtn.textContent = "Tur"; 
+                secondaryBtn.style.background = "#2196F3";
+
+                countdown = setInterval(() => {
+                    if (secondsLeft > 0) {
+                        secondsLeft--;
+                        updateTimerDisplay();
+                    } else {
+                        finishPomodoro();
+                    }
+                }, 1000);
+            }
+        }
+
+        function pauseTimer() {
+            if (isPaused) return; 
+            clearInterval(countdown);
+            isPaused = true;
+            mainBtn.textContent = "Devam Et";
+            mainBtn.style.background = "#355e36";
+            secondaryBtn.textContent = "Sıfırla"; 
+            secondaryBtn.style.background = "#834844";
+        }
+
+        function recordLap() {
+            const lapTime = totalInitialSeconds - secondsLeft;
+            const minutes = Math.floor(lapTime / 60);
+            const seconds = lapTime % 60;
+            const lapEntry = document.createElement('p');
+            lapEntry.textContent = `Tur ${totalPomodoros + 1}: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            lapList.appendChild(lapEntry);
+        }
+
+        function resetTimer() {
+            clearInterval(countdown);
+            isPaused = true;
+            isStarted = false;
+            
+            const duration = parseInt(timeInput.value) || 25;
+            secondsLeft = duration * 60;
+            
+            updateTimerDisplay();
+            mainBtn.textContent = "Başlat"; 
+            mainBtn.style.background = "#355e36";
+            secondaryBtn.textContent = "Sıfırla";
+            lapList.innerHTML = ""; 
+        }
+
+        function handleSecondaryAction() {
+            if (isStarted && !isPaused) {
+                recordLap();
+            } else {
+                resetTimer();
+            }
+        }
+
+        function finishPomodoro() {
+            clearInterval(countdown);
+            totalPomodoros++;
+            
+            const infoText = document.getElementById('total-info');
+            if(infoText) infoText.textContent = `Bugün toplam ${totalPomodoros} pomodoro tamamladın. Harikasın!`;
+
+            const sessionLog = document.getElementById('session-log');
+            const now = new Date();
+            const timeString = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
+            
+            const newEntry = document.createElement('li');
+            newEntry.style.marginBottom = "5px";
+            newEntry.textContent = `✅ Pomodoro #${totalPomodoros} - Saat ${timeString} itibariyle tamamlandı.`;
+            sessionLog.prepend(newEntry); 
+            recordLap();
+            alert("Pomodoro tamamlandı! Harika iş çıkardın!");
+            resetTimer();
+            startBreakTimer(); 
+            alert("Mola başladı! Şimdi biraz dinlenebilirsin.☕");
+        }
+        function setBreakTime() {
+            const breakDuration = parseInt(breakTimeInput.value);
+            if (isNaN(breakDuration) || breakDuration <= 0) {
+                alert("Lütfen geçerli bir süre girin!");
+                return;
+            }
+            breakSecondsLeft = breakDuration * 60;
+            updateBreakTimerDisplay();
+        }
+        function updateBreakTimerDisplay() {
+            const minutes = Math.floor(breakSecondsLeft / 60);
+            const seconds = breakSecondsLeft % 60;
+            breakTimerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+        function toggleBreakTimer() {
+            if (!isBreakStarted || isBreakPaused) {
+                startBreakTimer();
+            } else {
+                pauseBreakTimer();
+            }
+        }
+        function startBreakTimer() {
+            if (isBreakPaused) {
+                if (!isBreakStarted) {
+                    const breakDuration = parseInt(breakTimeInput.value);
+                    if (isNaN(breakDuration) || breakDuration <= 0) {
+                        alert("Lütfen geçerli bir süre girin!");
+                        return;
+                    }
+                    breakSecondsLeft = breakDuration * 60;
+                    isBreakStarted = true;
+                }
+
+                isBreakPaused = false;
+                breakMainBtn.textContent = "Duraklat";
+                breakMainBtn.style.background = "#ff9800";
+
+                breakCountdown = setInterval(() => {
+                    if (breakSecondsLeft > 0) {
+                        breakSecondsLeft--;
+                        updateBreakTimerDisplay();
+                    } else {
+                        finishBreak();
+                    }
+                }, 1000);
+            }
+        } function pauseBreakTimer() {
+            if (isBreakPaused) return; 
+            clearInterval(breakCountdown);
+            isBreakPaused = true;
+            breakMainBtn.textContent = "Devam Et";
+            breakMainBtn.style.background = "#355e36";
+        }
+        function resetBreakTimer() {
+            clearInterval(breakCountdown);
+            isBreakPaused = true;
+            isBreakStarted = false;
+            
+            const breakDuration = parseInt(breakTimeInput.value) || 5;
+            breakSecondsLeft = breakDuration * 60;
+            
+            updateBreakTimerDisplay();
+            breakMainBtn.textContent = "Başlat"; 
+            breakMainBtn.style.background = "#355e36";
+        }
+        function finishBreak() {
+            clearInterval(breakCountdown);
+            alert("Mola tamamlandı! Şimdi tekrar çalışmaya başlayabilirsin.");
+            resetBreakTimer();
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(secondsLeft / 60);
+            const seconds = secondsLeft % 60;
+            timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        let chronoInterval;
+        let chronoSeconds = 0;
+        let isChronoRunning = false;
+
+        const chronoDisplay = document.getElementById('chrono-display');
+
+        function updateChronoDisplay() {
+            const minutes = Math.floor(chronoSeconds / 60);
+            const seconds = chronoSeconds % 60;
+            chronoDisplay.textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function startChrono() {
+            if (isChronoRunning) return; 
+            
+            isChronoRunning = true;
+            chronoInterval = setInterval(() => {
+                chronoSeconds++;
+                updateChronoDisplay();
+            }, 1000);
+
+            document.getElementById('chrono-start').disabled = true;
+            document.getElementById('chrono-start').style.opacity = "0.5";
+        }
+
+        function stopChrono() {
+            isChronoRunning = false;
+            clearInterval(chronoInterval);
+            
+            document.getElementById('chrono-start').disabled = false;
+            document.getElementById('chrono-start').style.opacity = "1";
+        }
+
+        function resetChrono() {
+            stopChrono();
+            chronoSeconds = 0;
+            updateChronoDisplay();
+        }
+
+        // Sayfa ilk yüklendiğinde sayaçların ayarlanması
+        setTime();
+        updateBreakTimerDisplay();
+    </script>
+</body>
+</html>

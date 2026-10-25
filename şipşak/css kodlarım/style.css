@@ -1,0 +1,287 @@
+/* 1. GENEL AYARLAR (Renkler ve Fontlar) */
+:root {
+  --ana-renk: #111;
+  --yazi-rengi: #818181;
+  --vurgu-rengi: #f1f1f1;
+}
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  transition: margin-left .5s;
+  background-color: #f4f4f9; /* Yeni arka plan rengi eklendi */
+  margin: 0;
+}
+
+/* 2. YAN MENÜ (SIDEBAR) TASARIMI */
+.sidebar {
+  height: 100%;
+  width: 0;            /* Menüyü başlangıçta gizler */
+  position: fixed;     /* Sayfanın üstüne binmesini sağlar */
+  z-index: 10;         /* Diğer kartların üstünde durması için 10 yaptım */
+  top: 0;
+  left: 0;
+  background-color: #111; 
+  overflow-x: hidden;  
+  transition: 0.5s;    
+  padding-top: 60px;
+}
+
+.sidebar a {
+  padding: 15px 32px;
+  text-decoration: none;
+  font-size: 20px;
+  color: var(--yazi-rengi);
+  display: block;
+  transition: 0.3s;
+}
+
+.sidebar a:hover {
+  color: var(--vurgu-rengi);
+  background-color: #333;
+}
+
+/* 3. İÇERİK ALANI VE BUTONLAR */
+#main {
+  padding: 20px;
+  transition: margin-left .5s;
+
+}
+
+.openbtn {
+  font-size: 20px;
+  cursor: pointer;
+  background-color: var(--ana-renk);
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+/* Tam sayfa listeler için genel stil */
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+li {
+    background: white;
+    margin: 10px 0;
+    padding: 15px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    color: #333;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+li:hover {
+    transform: translateX(10px);
+    background-color: #eee;
+}
+
+
+/* =================================================== */
+/* 4. ANA SAYFA KART (DASHBOARD) STİLLERİ */
+/* =================================================== */
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-top: 30px;
+}
+
+/* Kartın Kapalı Hali  */
+.dash-card {
+    width: 100%;
+    max-width: 600px;
+    background: #2d1b1b;
+    color: #e2c4c4;
+    border-radius: 15px;
+    padding: 25px;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: relative;
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);}
+
+/* Kartın Hover Hali */
+.dash-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px rgba(0,0,0,0.2);
+    background: #3e2525;
+}
+
+/* Kartın Ön Yüzü (İkon ve Başlık) */
+.card-front {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    flex-grow: 1;
+    transition: 0.4s;
+    pointer-events: none; 
+}
+
+.card-front span { font-size: 4rem; margin-bottom: 15px; transition: 0.4s; }
+.card-front h2 { margin: 0; font-size: 1.5rem; }
+
+/* Kartın İçerik Alanı (Gizli) */
+.card-content {
+    display: none;
+    opacity: 0;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(226, 196, 196, 0.3);
+    transition: opacity 0.4s;
+}
+
+.card-content p { font-size: 14px; line-height: 1.6; color: #fff; }
+
+/* Kart Aktif (Açık) Olduğundaki Hali */
+.dash-card.active {
+    grid-column: 1 / -1; 
+    min-height: 350px;
+    background: #46281b;
+    cursor: default;
+    transform: translateY(0);
+}
+
+.dash-card.active .card-front {
+    flex-direction: row;
+    justify-content: flex-start;
+    height: auto;
+    flex-grow: 0;
+    gap: 15px;
+}
+/* Kart Aktif Olduğunda İkon Boyutu ve Konumu */
+.dash-card.active .card-front span { font-size: 2 rem; margin-bottom: 0; }
+/* Kart Aktif Olduğunda İçerik Alanını Göster */
+.dash-card.active .card-content { display: block; opacity: 1; animation: fadeIn 0.6s ease forwards; }
+
+/* Sağ Üstteki Kapatma Butonu */
+.close-card-btn {
+    display: none; position: absolute; top: 20px; right: 20px;
+    background: rgba(255,255,255,0.2); color: white; border: none;
+    border-radius: 50%; width: 35px; height: 35px; font-size: 20px;
+    cursor: pointer; line-height: 35px; text-align: center;
+}
+.close-card-btn:hover { background: rgba(255,255,255,0.4); }
+.dash-card.active .close-card-btn { display: block; }
+
+/* Tam Sayfaya Git Butonu */
+.go-page-link {
+    display: inline-block; margin-top: 15px; padding: 8px 15px;
+    background: #e2c4c4; color: #2d1b1b; text-decoration: none;
+    border-radius: 5px; font-weight: bold;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+
+/* =================================================== */
+/* 5. POMODORO WIDGET SAYAÇ STİLLERİ                   */
+/* =================================================== */
+
+.pomodoro-wrapper {
+    display: flex;
+    gap: 20px;
+    align-items: stretch; /* İki kutunun yüksekliğini milimetrik eşitler */
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap; /* Küçük ekranlarda kutuların alt alta gelmesini sağlar */
+    margin-top: 35px;
+}
+
+.pomodoro-box {
+    flex: 1; /* Kutuların genişliğini eşitler */
+    min-width: 220px;
+    padding: 30px 20px;
+    
+    /* ŞEFFAFLIK AYARI BURADA: Son değer (0.7) şeffaflığı belirler */
+    background: rgba(45, 27, 27, 0.7); 
+    
+    border-radius: 15px;
+    text-align: center;
+    color: #e2c4c4;
+    display: flex;
+    flex-direction: column; /* İçerikleri dikey hizalar */ 
+    align-items: center;
+    justify-content: flex-start; /* İçerikleri üstten hizalar */
+    border: 1px solid rgba(226, 196, 196, 0.2); 
+}
+.mola-box { 
+    flex: 1; 
+    min-width: 220px; /* KRİTİK KOD: Yan yana sığmaları için 280px'den 220px'e düşürüldü */    padding: 30px 20px; 
+    background: rgba(45, 27, 27, 0.7); 
+    border-radius: 15px; 
+    text-align: center; 
+    color: #e2c4c4; 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    justify-content: flex-start; 
+    border: 1px solid rgba(226, 196, 196, 0.2); 
+}
+
+.pomodoro-box h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+}
+.pomo-menu { display: flex; flex-direction: column; gap: 15px; }
+
+/* İnput ve Ayarla Butonunu Hizalamak İçin Yeni Sınıf */
+.input-group {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px; /* Yazı, kutu ve buton arasına boşluk koyar */
+}
+
+.input-group input {
+    width: 50px;
+    text-align: center;
+    border-radius: 4px;
+    border: none;
+    padding: 6px;
+    font-size: 14px;
+}
+
+.pomo-btn {
+    background: #e2c4c4; color: #2d1b1b; border: none; padding: 12px;
+    border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 15px;
+}
+.pomo-btn:hover { background: #fff; transform: translateY(-2px); }
+
+.timer-view { display: none; text-align: center; }
+
+.timer-display { 
+    font-size: 4rem; font-weight: bold; margin: 15px 0; 
+    color: #fff; font-variant-numeric: tabular-nums; 
+}
+.timer-controls { display: flex; justify-content: center; gap: 15px; }
+
+/* Sayaç Kontrol Butonları (Başlat/Sıfırla) */
+.t-btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 15px; }
+.t-btn.start { background: #7ad57d; color: white; }
+.t-btn.pause { background: #d6a458; color: white; }
+.t-btn.reset { background: #f44336; color: white; }
+
+/* Sayacın içindeki geri dön butonu */
+.back-btn-inner {
+    background: transparent; color: #e2c4c4; border: 1px solid #e2c4c4;
+    padding: 6px 12px; border-radius: 5px; cursor: pointer; display: inline-block;
+}
+.back-btn-inner:hover { background: #e2c4c4; color: #2d1b1b; }
+
+

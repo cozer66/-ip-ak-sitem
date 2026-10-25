@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <title>Hatırlatıcı Paneli</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .dash-card {
+            width: 100%;
+            max-width: 600px;
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        /* --- KART IZGARASI --- */
+        .islem-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        /* --- DÖNÜŞEN KARTLARIN TEMEL YAPISI --- */
+        .islem-karti {
+            background-color: #2b2727; 
+            border-radius: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Kart açıldığında tüm satırı kaplar ve rengi form rengine döner */
+        .islem-karti.acik {
+            grid-column: 1 / -1; /* Izgarada tam genişlik alır */
+            background-color: #e29191; 
+            box-shadow: 0 8px 16px rgba(226, 145, 145, 0.4);
+        }
+
+        /* KARTIN ÖN YÜZÜ (İkonlar) */
+        .kart-on {
+            color: #ffffff;
+            padding: 30px 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .kart-on:hover {
+            background-color: #3a3535;
+        }
+
+        .islem-karti.acik .kart-on {
+            display: none; /* Kart açılınca ön yüz gizlenir */
+        }
+
+        .kart-on .ikon {
+            font-size: 45px;
+            margin-bottom: 10px;
+        }
+
+        .kart-on .baslik {
+            font-size: 15px;
+            font-weight: bold;
+        }
+
+        /* KARTIN ARKA YÜZÜ (Form İçeriği) */
+        .kart-arka {
+            display: none; /* Varsayılan olarak gizlidir */
+            padding: 25px;
+            color: #333;
+        }
+
+        .islem-karti.acik .kart-arka {
+            display: block; /* Kart açılınca form görünür */
+            animation: icerikBelir 0.4s ease forwards;
+        }
+
+        @keyframes icerikBelir {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Form Kapatma Butonu */
+        .kart-kapat-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
+            opacity: 0.6;
+        }
+
+        .kart-kapat-btn:hover {
+            opacity: 1;
+        }
+
+        /* --- FORM ELEMANLARI --- */
+        .kart-arka h2 {
+            margin-top: 0;
+            font-size: 20px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #f5c1ec;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            margin-bottom: 6px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .form-group input, .form-group select {
+            padding: 10px;
+            font-size: 14px;
+            border: 1px solid #f5c1ec;
+            border-radius: 5px;
+            background-color: #fff;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #99c9fc;
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.15);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: #007bff;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        .submit-btn:hover { background-color: #0056b3; }
+
+        /* --- ALT KISIMDAKİ LİSTE WIDGET'LARI --- */
+        .widget-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        .widget-card {
+            background-color: #2b2727;
+            border-radius: 16px;
+            padding: 20px;
+            flex: 1;
+            min-width: 200px;
+            color: #ffffff;
+        }
+
+        .widget-header {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #f5c1ec;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 10px;
+        }
+
+        .widget-content ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .widget-content li {
+            padding: 10px 0;
+            border-bottom: 1px dashed #555;
+            font-size: 14px;
+            color: #ddd;
+        }
+        .widget-content li:last-child { border-bottom: none; }
+    </style>
+</head>
+<body>
+
+<div class="dash-card">
+    <a href="/" style="text-decoration: none; color: #666; font-size: 14px;">← Ana Sayfaya Dön</a>
+    <h3 style="margin-top: 15px; color: #333;">Hangi işlemi yapmak istiyorsunuz?</h3>
+    
+    <!-- İŞLEM KARTLARI (Tıklayınca İçinde Form Açılır) -->
+    <div class="islem-grid">
+        
+        <!-- HATIRLATICI KARTI -->
+        <div class="islem-karti" id="kart-hatirlatici">
+            <!-- Ön Yüz -->
+            <div class="kart-on" onclick="kartiAc('kart-hatirlatici')">
+                <div class="ikon">⏰</div>
+                <div class="baslik">Hatırlatıcı</div>
+            </div>
+            
+            <!-- Arka Yüz (Genişlediğinde Çıkan Form) -->
+            <div class="kart-arka">
+                <button class="kart-kapat-btn" onclick="kartiKapat(event, 'kart-hatirlatici')">✖</button>
+                <h2>Yeni Hatırlatıcı Ekle</h2>
+                <form action="/hatirlatici_kaydet" method="POST">
+                    <div class="form-group">
+                        <label for="ay">Ay:</label>
+                        <select id="ay" name="ay" required>
+                            <option value="" selected disabled>Önce Ay Seçin</option>
+                            <option value="1">Ocak</option>
+                            <option value="2">Şubat</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="gun">Gün:</label>
+                        <select id="gun" name="gun" required disabled>
+                            <option value="" selected disabled>Önce Ay Seçin</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="submit-btn">Kaydet</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ALARMLAR KARTI -->
+        <div class="islem-karti" id="kart-alarmlar">
+            <div class="kart-on" onclick="kartiAc('kart-alarmlar')">
+                <div class="ikon">🔔</div>
+                <div class="baslik">Alarmlar</div>
+            </div>
+            <div class="kart-arka">
+                <button class="kart-kapat-btn" onclick="kartiKapat(event, 'kart-alarmlar')">✖</button>
+                <h2>Yeni Alarm Kur</h2>
+                <div class="form-group">
+                    <label>Saat:</label>
+                    <input type="time">
+                </div>
+                <button class="submit-btn">Kur</button>
+            </div>
+        </div>
+
+        <!-- ETKİNLİKLER KARTI -->
+        <div class="islem-karti" id="kart-etkinlikler">
+            <div class="kart-on" onclick="kartiAc('kart-etkinlikler')">
+                <div class="ikon">📅</div>
+                <div class="baslik">Etkinlikler</div>
+            </div>
+            <div class="kart-arka">
+                <button class="kart-kapat-btn" onclick="kartiKapat(event, 'kart-etkinlikler')">✖</button>
+                <h2>Yeni Etkinlik Ekle</h2>
+                <div class="form-group">
+                    <label>Etkinlik Adı:</label>
+                    <input type="text" placeholder="Örn: Proje Teslimi">
+                </div>
+                <button class="submit-btn">Ekle</button>
+            </div>
+        </div>
+
+    </div> <!-- İzlem Grid Sonu -->
+
+    <!-- AKTİF OLANLARI GÖSTEREN WIDGET'LAR -->
+    <div class="widget-container">
+        <div class="widget-card">
+            <div class="widget-header"><span>📌</span> Aktif Hatırlatıcılar</div>
+            <div class="widget-content">
+                <ul>
+                    <li>Python projeni tamamla</li>
+                    <li>Yarın sabah toplantı var</li>
+                </ul>
+            </div>
+        </div>
+        <div class="widget-card">
+            <div class="widget-header"><span>⏰</span> Kurulu Alarmlar</div>
+            <div class="widget-content">
+                <ul>
+                    <li><strong>07:00</strong> - Sabah Alarmı</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // Kartı Genişletme ve Formu Açma Fonksiyonu
+    function kartiAc(kartId) {
+        // Önce açık olan diğer kartlar varsa kapat
+        document.querySelectorAll('.islem-karti').forEach(kart => {
+            kart.classList.remove('acik');
+        });
+        
+        // Tıklanan karta 'acik' class'ını ekle
+        document.getElementById(kartId).classList.add('acik');
+    }
+
+    // Formu (Kartı) Kapatma Fonksiyonu
+    function kartiKapat(event, kartId) {
+        event.stopPropagation(); // Tıklamanın alt elementlere geçmesini engeller
+        document.getElementById(kartId).classList.remove('acik');
+    }
+
+    // Ay/Gün mantığı kodların aynen korunabilir
+    document.addEventListener("DOMContentLoaded", function() {
+        const aySelect = document.getElementById("ay");
+        const gunSelect = document.getElementById("gun");
+
+        function gunleriGuncelle() {
+            const secilenAy = parseInt(aySelect.value);
+            if (isNaN(secilenAy)) return;
+
+            const oAydakiGunSayisi = new Date(2026, secilenAy, 0).getDate();
+            gunSelect.innerHTML = '<option value="" selected disabled>Gün Seçin</option>';
+
+            for (let i = 1; i <= oAydakiGunSayisi; i++) {
+                const option = document.createElement("option");
+                option.value = i;
+                option.textContent = i;
+                gunSelect.appendChild(option);
+            }
+            gunSelect.disabled = false;
+        }
+
+        if(aySelect) {
+            aySelect.addEventListener("change", gunleriGuncelle);
+        }
+    });
+</script>
+{% include 'forum.html' %}
+</body>
+</html>

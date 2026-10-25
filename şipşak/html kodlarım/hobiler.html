@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <title>Hobilerim</title>
+    <!-- Senin ana stil dosyan varsa burada durabilir -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    
+    <style>
+        /* --- YENİ EKLENEN KART STİLLERİ --- */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .dash-card {
+            width: 100%;
+            max-width: 800px; /* Panolar ve listeler sığsın diye biraz genişlettik */
+            background: white;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .islem-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .islem-karti {
+            background-color: #2b2727; 
+            border-radius: 16px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .islem-karti.acik {
+            grid-column: 1 / -1; 
+            background-color: #e29191; /* Arka plan genişleyince alacağı renk */
+            box-shadow: 0 8px 16px rgba(226, 145, 145, 0.4);
+        }
+
+        /* KARTIN ÖN YÜZÜ */
+        .kart-on {
+            color: #ffffff;
+            padding: 30px 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            height: 100%;
+            box-sizing: border-box;
+        }
+
+        .kart-on:hover {
+            background-color: #3a3535;
+        }
+
+        .islem-karti.acik .kart-on { display: none; }
+
+        .kart-on .ikon {
+            font-size: 45px;
+            margin-bottom: 10px;
+        }
+
+        .kart-on .baslik {
+            font-size: 15px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        /* KARTIN ARKA YÜZÜ (Genişlediğinde açılan kısım) */
+        .kart-arka {
+            display: none; 
+            padding: 25px;
+            color: #333;
+        }
+
+        .islem-karti.acik .kart-arka {
+            display: block; 
+            animation: icerikBelir 0.4s ease forwards;
+        }
+
+        @keyframes icerikBelir {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .kart-kapat-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #333;
+            cursor: pointer;
+            opacity: 0.6;
+            z-index: 10;
+        }
+
+        .kart-kapat-btn:hover { opacity: 1; }
+
+        .kart-arka h2 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #f5c1ec;
+            padding-bottom: 10px;
+            color: #183a0d;
+        }
+
+        /* Hobi Medya İçerikleri */
+        .media-container {
+            text-align: center;
+        }
+        
+        .media-container img, .media-container iframe {
+            width: 100%;
+            max-width: 560px;
+            border-radius: 12px;
+            margin-top: 15px;
+        }
+
+        .hobi-liste {
+            text-align: left; 
+            font-size: 16px; 
+            color: #333;
+            list-style-type: disc;
+            padding-left: 20px;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dash-card">
+        <a href="/" style="text-decoration: none; color: #666; font-size: 14px;">← Ana Sayfaya Dön</a>
+        
+        <h1 style="font-size: 22px; margin-top: 15px; color: #333;">Hangi hobiyle ilgileniyorsunuz?</h1>
+        
+        <!-- YENİ GENİŞLEYEN KART YAPISI -->
+        <div class="islem-grid">
+
+            <!-- 1. ÇİZİM KARTI -->
+            <div class="islem-karti" id="kart-cizim">
+                <div class="kart-on" onclick="kartiAc('kart-cizim', 'cizim')">
+                    <div class="ikon">🎨</div>
+                    <div class="baslik">Çizim Yapmak</div>
+                </div>
+                <div class="kart-arka">
+                    <button class="kart-kapat-btn" onclick="kartiKapat(event, 'kart-cizim')">✖</button>
+                    <h2>Çizim Yapmak</h2>
+                    <div id="icerik-cizim" class="media-container"></div>
+                </div>
+            </div>
+
+            <!-- 2. ÖRGÜ KARTI -->
+            <div class="islem-karti" id="kart-orgu">
+                <div class="kart-on" onclick="kartiAc('kart-orgu', 'orgu')">
+                    <div class="ikon">🧶</div>
+                    <div class="baslik">Örgü ve El İşleri</div>
+                </div>
+                <div class="kart-arka">
+                    <button class="kart-kapat-btn" onclick="kartiKapat(event, 'kart-orgu')">✖</button>
+                    <h2>Örgü ve El İşleri</h2>
+                    <div id="icerik-orgu" class="media-container"></div>
+                </div>
+            </div>
+
+            <!-- 3. DİKİŞ KARTI -->
+            <div class="islem-karti" id="kart-dikis">
+                <div class="kart-on" onclick="kartiAc('kart-dikis', 'dikis')">
+                    <div class="ikon">🪡</div>
+                    <div class="baslik">Dikiş Dikmek</div>
+                </div>
+                <div class="kart-arka">
+                    <button class="kart-kapat-btn" onclick="kartiKapat(event, 'kart-dikis')">✖</button>
+                    <h2>Dikiş Dikmek</h2>
+                    <div id="icerik-dikis" class="media-container"></div>
+                </div>
+            </div>
+
+            <!-- 4. KİTAP KARTI -->
+            <div class="islem-karti" id="kart-kitap">
+                <div class="kart-on" onclick="kartiAc('kart-kitap', 'kitap')">
+                    <div class="ikon">📚</div>
+                    <div class="baslik">Kitap Okumak</div>
+                </div>
+                <div class="kart-arka">
+                    <button class="kart-kapat-btn" onclick="kartiKapat(event, 'kart-kitap')">✖</button>
+                    <h2>En Sevdiğim Kitaplar</h2>
+                    <div id="icerik-kitap" class="media-container"></div>
+                </div>
+            </div>
+
+            <!-- 5. FİLM & DİZİ KARTI -->
+            <div class="islem-karti" id="kart-film">
+                <div class="kart-on" onclick="kartiAc('kart-film', 'film')">
+                    <div class="ikon">🎬</div>
+                    <div class="baslik">Film ve Dizi</div>
+                </div>
+                <div class="kart-arka">
+                    <button class="kart-kapat-btn" onclick="kartiKapat(event, 'kart-film')">✖</button>
+                    <h2>En Sevdiğim Filmler ve Diziler</h2>
+                    <div id="icerik-film" class="media-container"></div>
+                </div>
+            </div>
+
+            <!-- 6. MÜZİK KARTI -->
+            <div class="islem-karti" id="kart-muzik">
+                <div class="kart-on" onclick="kartiAc('kart-muzik', 'muzik')">
+                    <div class="ikon">🎧</div>
+                    <div class="baslik">Müzik Keşfetmek</div>
+                </div>
+                <div class="kart-arka">
+                    <button class="kart-kapat-btn" onclick="kartiKapat(event, 'kart-muzik')">✖</button>
+                    <h2>Yeni Müzikler Keşfetmek</h2>
+                    <div id="icerik-muzik" class="media-container"></div>
+                </div>
+            </div>
+
+            <!-- 7. YEMEK KARTI -->
+            <div class="islem-karti" id="kart-yemek">
+                <div class="kart-on" onclick="kartiAc('kart-yemek', 'yemek')">
+                    <div class="ikon">🍳</div>
+                    <div class="baslik">Yemek Yapmak</div>
+                </div>
+                <div class="kart-arka">
+                    <button class="kart-kapat-btn" onclick="kartiKapat(event, 'kart-yemek')">✖</button>
+                    <h2>Yemek Yapmak</h2>
+                    <div id="icerik-yemek" class="media-container">
+                        <p style="text-align: left; font-size: 16px;">Bu hobi için içerik henüz eklenmedi. (Belki güzel bir tarif panosu eklenebilir!)</p>
+                    </div>
+                </div>
+            </div>
+
+        </div> <!-- İzlem Grid Sonu -->
+    </div> <!-- Dash Card Sonu -->
+
+    <script>
+        // --- KART AÇMA VE İÇERİK YÜKLEME FONKSİYONU ---
+        function kartiAc(kartId, hobby) {
+            console.log(hobby + " seçildi:");
+
+            // Önce tüm kartları kapat
+            document.querySelectorAll('.islem-karti').forEach(kart => {
+                kart.classList.remove('acik');
+            });
+            
+            // Tıklanan kartı aç
+            document.getElementById(kartId).classList.add('acik');
+
+            // İlgili kartın içerik alanını bul
+            const mediaDiv = document.getElementById('icerik-' + hobby);
+
+            // Eğer içerik daha önce yüklenmediyse (boşsa) yükle (Sayfa hızını artırır)
+            if (mediaDiv.innerHTML.trim() === '') {
+                if (hobby === 'cizim') {
+                    mediaDiv.innerHTML = `
+                        <h3 style="text-align:center;">Pinterest İlham Panom</h3>
+                        <a data-pin-do="embedBoard" data-pin-board-width="400" href="https://www.pinterest.com/zoldiackxxx_15/referans2/"></a>
+                    `;
+                } 
+                else if (hobby === 'orgu') {
+                    mediaDiv.innerHTML = `
+                        <h3 style="text-align:center;">Örgü İlham Panom</h3>
+                        <a data-pin-do="embedBoard" data-pin-board-width="400" href="https://www.pinterest.com/zoldiackxxx_15/örgü/"></a>
+                    `;
+                } 
+                else if (hobby === 'dikis') {
+                    const panoUrl = "https://www.pinterest.com/zoldiackxxx_15/1lGNcwz2d/";
+                    mediaDiv.innerHTML = `
+                        <h3 style="text-align:center;">Dikiş İlham Panom</h3>
+                        <a data-pin-do="embedBoard" data-pin-board-width="400" href="${panoUrl}"></a>
+                    `;
+                } 
+                else if (hobby === 'kitap') {
+                    mediaDiv.innerHTML = `
+                        <ul class="hobi-liste">
+                            <li>Yüzüklerin Efendisi - J.R.R. Tolkien</li>
+                            <li>Harry Potter Serisi - J.K. Rowling</li>
+                            <li>Kürk Mantolu Madonna - Sabahattin Ali</li>
+                            <li>Simyacı - Paulo Coelho</li>
+                            <li>Suç ve Ceza - Fyodor Dostoyevski</li>
+                        </ul>
+                    `;
+                } 
+                else if (hobby === 'film') {
+                    mediaDiv.innerHTML = `
+                        <ul class="hobi-liste">
+                            <li>Yüzüklerin Efendisi Serisi</li>
+                            <li>Harry Potter Serisi</li>
+                            <li>Game of Thrones</li>
+                            <li>Breaking Bad</li>
+                            <li>Stranger Things</li>
+                        </ul>
+                    `;
+                } 
+                else if (hobby === 'muzik') {
+                    mediaDiv.innerHTML = `
+                        <h3 style="text-align:center;">Spotify Çalma Listem</h3>
+                        <iframe 
+                            data-testid="embed-iframe" 
+                            style="border-radius:12px" 
+                            src="https://open.spotify.com/embed/playlist/4TFa0ZhxdQ71oEMmbJpJVK?utm_source=generator" 
+                            width="100%" 
+                            height="352" 
+                            frameBorder="0" 
+                            allowfullscreen="" 
+                            allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" 
+                            loading="lazy">
+                        </iframe>          
+                    `;
+                }
+            }
+
+            // Eğer Pinterest panosuysa scripti tetikle ki görsel dolsun
+            if (['cizim', 'orgu', 'dikis'].includes(hobby)) {
+                setTimeout(() => {
+                    if (window.PinUtils) {
+                        window.PinUtils.build();
+                    } else {
+                        console.log("Pinterest scripti henüz yüklenmedi.");
+                    }
+                }, 200);
+            }
+        }
+
+        // --- KARTI KAPATMA FONKSİYONU ---
+        function kartiKapat(event, kartId) {
+            event.stopPropagation(); // Kapatma butonuna basınca kartın tekrar açılmasını engeller
+            document.getElementById(kartId).classList.remove('acik');
+        }
+    </script>
+    
+    <!-- Pinterest Scripti -->
+    <script async defer src="https://assets.pinterest.com/js/pinit.js"></script>
+    {% include 'forum.html' %}
+</body>
+</html>
